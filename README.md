@@ -50,7 +50,7 @@ ADV-Attendify automates the entire attendance process using state-of-the-art fac
 ### Clone
 
 ```bash
-git clone https://github.com/yourusername/adv-attendify.git
+git clone https://github.com/imtona44/adv-attendify.git
 cd adv-attendify
 ```
 
