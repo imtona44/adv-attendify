@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Login | ADV-Attendify</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/websitelogo.png">
+    
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- CryptoJS for password hashing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <!-- Font Awesome for eye icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: 
+                url('images/csulogo.png') left 20px top 20px/61px 61px no-repeat,
+                url('images/coealogo.png') left 90px top 20px/61px 61px no-repeat,
+                url('images/icpeplogo.png') left 160px top 20px/61px 61px no-repeat,
+                url('images/background.jpg') center/cover no-repeat fixed;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Very subtle overlay to help logos stand out */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.1);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ===== RESPONSIVE BACKGROUND WITH CENTERED LOGOS UNDER 600px ===== */
+        @media (max-width: 768px) {
+            body {
+                background: 
+                    url('images/csulogo.png') left 15px top 15px/45px 45px no-repeat,
+                    url('images/coealogo.png') left 70px top 15px/45px 45px no-repeat,
+                    url('images/icpeplogo.png') left 125px top 15px/45px 45px no-repeat,
+                    url('images/background.jpg') center/cover no-repeat fixed;
+                padding: 70px 15px 15px 15px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                background: 
+                    url('images/csulogo.png') center top 15px/45px 45px no-repeat,
+                    url('images/coealogo.png') center top 15px/45px 45px no-repeat,
+                    url('images/icpeplogo.png') center top 15px/45px 45px no-repeat,
+                    url('images/background.jpg') center/cover no-repeat fixed;
+                background-position: calc(50% - 60px) 15px, center 15px, calc(50% + 60px) 15px, center;
+                padding: 70px 15px 15px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                background: 
+                    url('images/csulogo.png') center top 12px/40px 40px no-repeat,
+                    url('images/coealogo.png') center top 12px/40px 40px no-repeat,
+                    url('images/icpeplogo.png') center top 12px/40px 40px no-repeat,
+                    url('images/background.jpg') center/cover no-repeat fixed;
+                background-position: calc(50% - 50px) 12px, center 12px, calc(50% + 50px) 12px, center;
+                padding: 60px 12px 12px 12px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            body {
+                background: 
+                    url('images/csulogo.png') center top 10px/35px 35px no-repeat,
+                    url('images/coealogo.png') center top 10px/35px 35px no-repeat,
+                    url('images/icpeplogo.png') center top 10px/35px 35px no-repeat,
+                    url('images/background.jpg') center/cover no-repeat fixed;
+                background-position: calc(50% - 45px) 10px, center 10px, calc(50% + 45px) 10px, center;
+                padding: 50px 10px 10px 10px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            body {
+                background: 
+                    url('images/csulogo.png') center top 8px/30px 30px no-repeat,
+                    url('images/coealogo.png') center top 8px/30px 30px no-repeat,
+                    url('images/icpeplogo.png') center top 8px/30px 30px no-repeat,
+                    url('images/background.jpg') center/cover no-repeat fixed;
+                background-position: calc(50% - 40px) 8px, center 8px, calc(50% + 40px) 8px, center;
+                padding: 45px 8px 8px 8px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            body {
+                background: 
+                    url('images/csulogo.png') center top 6px/25px 25px no-repeat,
+                    url('images/coealogo.png') center top 6px/25px 25px no-repeat,
+                    url('images/icpeplogo.png') center top 6px/25px 25px no-repeat,
+                    url('images/background.jpg') center/cover no-repeat fixed;
+                background-position: calc(50% - 35px) 6px, center 6px, calc(50% + 35px) 6px, center;
+                padding: 40px 6px 6px 6px;
+            }
+        }
+
+        /* ----- FULLY ADAPTIVE GLASS PANEL ----- */
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            max-height: 90vh;
+            border-radius: 28px;
+            background: rgba(20, 30, 50, 0.55);
+            backdrop-filter: blur(18px) saturate(150%);
+            border: 1px solid rgba(110, 243, 255, 0.25);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Responsive container */
+        @media (max-width: 600px) {
+            .login-container {
+                max-width: 100%;
+                border-radius: 24px;
+                max-height: 85vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                border-radius: 22px;
+                max-height: 88vh;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .login-container {
+                border-radius: 20px;
+                max-height: 90vh;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .login-container {
+                border-radius: 18px;
+                max-height: 92vh;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .login-container {
+                border-radius: 16px;
+                max-height: 94vh;
+            }
+        }
+
+        /* Header adaptive */
+        .login-header {
+            text-align: center;
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(110, 243, 255, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .login-header {
+                padding: 20px 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-header {
+                padding: 18px 16px;
+            }
+            
+            .login-header h1 {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .login-header {
+                padding: 16px 14px;
+            }
+            
+            .login-header h1 {
+                font-size: 26px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .login-header {
+                padding: 14px 12px;
+            }
+            
+            .login-header h1 {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .login-header {
+                padding: 12px 10px;
+            }
+            
+            .login-header h1 {
+                font-size: 22px;
+            }
+            
+            .login-header span {
+                width: 50px;
+                height: 3px;
+                margin: 8px auto 0;
+            }
+        }
+
+        .login-header h1 {
+            color: #6ef3ff;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .login-header span {
+            display: block;
+            width: 70px;
+            height: 4px;
+            margin: 12px auto 0;
+            border-radius: 4px;
+            background: linear-gradient(to right, #00f2ff, #7f5cff);
+        }
+
+        /* Body adaptive padding */
+        .login-body {
+            padding: 25px 25px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        @media (max-width: 600px) {
+            .login-body {
+                padding: 22px 22px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .login-body {
+                padding: 20px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-body {
+                padding: 18px 18px;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .login-body {
+                padding: 16px 16px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .login-body {
+                padding: 14px 14px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .login-body {
+                padding: 12px 12px;
+            }
+        }
+
+        @media (max-width: 340px) {
+            .login-body {
+                padding: 10px 10px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .login-body {
+                padding: 8px 8px;
+            }
+        }
+
+        /* Input groups adapt */
+        .input-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        @media (max-width: 600px) {
+            .input-group {
+                margin-bottom: 16px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .input-group {
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .input-group {
+                margin-bottom: 14px;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .input-group {
+                margin-bottom: 13px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .input-group {
+                margin-bottom: 12px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .input-group {
+                margin-bottom: 11px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .input-group {
+                margin-bottom: 10px;
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #b8e9ff;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        @media (max-width: 520px) {
+            label {
+                font-size: 13.5px;
+                margin-bottom: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            label {
+                font-size: 13px;
+                margin-bottom: 4px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            label {
+                font-size: 12.5px;
+                margin-bottom: 3px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            label {
+                font-size: 12px;
+                margin-bottom: 2px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            label {
+                font-size: 11.5px;
+                margin-bottom: 2px;
+            }
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        @media (max-width: 600px) {
+            input {
+                padding: 13px 15px;
+                font-size: 14.5px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            input {
+                padding: 12px 14px;
+                font-size: 14px;
+                border-radius: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            input {
+                padding: 11px 13px;
+                font-size: 13.5px;
+                border-radius: 10px;
+            }
+        }
+
+        @media (max-width: 440px) {
+            input {
+                padding: 10px 12px;
+                font-size: 13px;
+                border-radius: 9px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            input {
+                padding: 9px 11px;
+                font-size: 12.5px;
+                border-radius: 8px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            input {
+                padding: 8px 10px;
+                font-size: 12px;
+                border-radius: 7px;
+            }
+        }
+
+        @media (max-width: 340px) {
+            input {
+                padding: 7px 9px;
+                font-size: 11.5px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            input {
+                padding: 6px 8px;
+                font-size: 11px;
+                border-radius: 6px;
+            }
+        }
+
+        /* password wrapper adapts */
+        .password-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-input-wrapper input {
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #a9b4d6;
+            font-size: 18px;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        @media (max-width: 600px) {
+            .toggle-password {
+                right: 14px;
+                font-size: 17px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .toggle-password {
+                right: 13px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .toggle-password {
+                right: 12px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .toggle-password {
+                right: 11px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .toggle-password {
+                right: 10px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .toggle-password {
+                right: 9px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .toggle-password {
+                right: 8px;
+                font-size: 11px;
+            }
+        }
+
+        input::placeholder {
+            color: #a9b4d6;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        @media (max-width: 520px) {
+            input::placeholder {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            input::placeholder {
+                font-size: 12.5px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            input::placeholder {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            input::placeholder {
+                font-size: 11.5px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            input::placeholder {
+                font-size: 11px;
+            }
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00f2ff;
+            box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.35);
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        /* error message adaptive */
+        .error-msg {
+            color: #ff6b6b;
+            font-size: 11px;
+            margin-top: 4px;
+            display: none;
+            position: relative;
+            line-height: 1.2;
+        }
+
+        @media (max-width: 520px) {
+            .error-msg {
+                font-size: 10.5px;
+                margin-top: 3px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .error-msg {
+                font-size: 10px;
+                margin-top: 2px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .error-msg {
+                font-size: 9.5px;
+                margin-top: 2px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .error-msg {
+                font-size: 9px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .error-msg {
+                font-size: 8.5px;
+                margin-top: 1px;
+            }
+        }
+
+        .invalid-credentials {
+            color: #ff6b6b;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 15px;
+            display: none;
+            background: rgba(255, 107, 107, 0.2);
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #ff6b6b;
+        }
+
+        @media (max-width: 520px) {
+            .invalid-credentials {
+                font-size: 12.5px;
+                padding: 7px 9px;
+                margin-bottom: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .invalid-credentials {
+                font-size: 12px;
+                padding: 6px 8px;
+                margin-bottom: 12px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .invalid-credentials {
+                font-size: 11.5px;
+                padding: 5px 7px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .invalid-credentials {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .invalid-credentials {
+                font-size: 10.5px;
+                padding: 4px 6px;
+            }
+        }
+
+        /* Forgot password link */
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 520px) {
+            .forgot-password {
+                margin-bottom: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .forgot-password {
+                margin-bottom: 16px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .forgot-password {
+                margin-bottom: 14px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .forgot-password {
+                margin-bottom: 12px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .forgot-password {
+                margin-bottom: 10px;
+            }
+        }
+
+        .forgot-password a {
+            color: #6ef3ff;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 520px) {
+            .forgot-password a {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .forgot-password a {
+                font-size: 12.5px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .forgot-password a {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .forgot-password a {
+                font-size: 11.5px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .forgot-password a {
+                font-size: 11px;
+            }
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        /* LOGIN button — fully responsive */
+        .login-btn {
+            width: 60%;
+            padding: 14px 10px;
+            border-radius: 40px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #020617;
+            background: linear-gradient(135deg, #00f2ff, #7f5cff);
+            transition: 0.3s;
+            display: block;
+            margin: 0 auto 20px auto;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 600px) {
+            .login-btn {
+                width: 70%;
+                padding: 13px 9px;
+                font-size: 15.5px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .login-btn {
+                width: 75%;
+                padding: 12px 8px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-btn {
+                width: 80%;
+                padding: 11px 7px;
+                font-size: 14.5px;
+                border-radius: 36px;
+                margin-bottom: 18px;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .login-btn {
+                width: 85%;
+                padding: 10px 6px;
+                font-size: 14px;
+                border-radius: 34px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .login-btn {
+                width: 90%;
+                padding: 9px 5px;
+                font-size: 13.5px;
+                border-radius: 32px;
+                margin-bottom: 16px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .login-btn {
+                width: 95%;
+                padding: 8px 4px;
+                font-size: 13px;
+                border-radius: 30px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .login-btn {
+                width: 98%;
+                padding: 7px 4px;
+                font-size: 12.5px;
+                border-radius: 28px;
+                margin-bottom: 14px;
+            }
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 35px rgba(0, 242, 255, 0.5);
+        }
+
+        .login-btn:active {
+            transform: scale(0.97);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* signup section */
+        .signup-section {
+            margin-top: 12px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(110, 243, 255, 0.2);
+            text-align: center;
+        }
+
+        @media (max-width: 520px) {
+            .signup-section {
+                margin-top: 10px;
+                padding-top: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .signup-section {
+                margin-top: 8px;
+                padding-top: 12px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .signup-section {
+                margin-top: 6px;
+                padding-top: 10px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .signup-section {
+                padding-top: 8px;
+            }
+        }
+
+        .signup-section p {
+            color: #c7e9ff;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 520px) {
+            .signup-section p {
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .signup-section p {
+                font-size: 12.5px;
+                margin-bottom: 8px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .signup-section p {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .signup-section p {
+                font-size: 11.5px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .signup-section p {
+                font-size: 11px;
+                margin-bottom: 6px;
+            }
+        }
+
+        .signup-link {
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 40px;
+            border: 2px solid #00f2ff;
+            color: #6ef3ff;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.3s;
+            font-size: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .signup-link {
+                padding: 9px 25px;
+                font-size: 14.5px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .signup-link {
+                padding: 8px 22px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .signup-link {
+                padding: 7px 20px;
+                font-size: 13.5px;
+                border-width: 1.8px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .signup-link {
+                padding: 6px 18px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .signup-link {
+                padding: 5px 16px;
+                font-size: 12.5px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .signup-link {
+                padding: 4px 14px;
+                font-size: 12px;
+                border-width: 1.5px;
+            }
+        }
+
+        .signup-link:hover {
+            background: #00f2ff;
+            color: #020617;
+            box-shadow: 0 10px 25px rgba(0, 242, 255, 0.45);
+        }
+
+        /* touch-friendly tap targets */
+        @media (max-width: 768px) {
+            .login-btn, .signup-link, .toggle-password, .forgot-password a {
+                cursor: pointer;
+            }
+            
+            input:focus {
+                font-size: 16px;
+            }
+        }
+
+        /* Custom SweetAlert2 remains clean */
+        .swal2-popup {
+            background: #0b2a3a !important;
+            border-radius: 22px !important;
+            border: 1px solid rgba(110, 243, 255, 0.25) !important;
+        }
+
+        .swal2-title {
+            color: #6ef3ff !important;
+        }
+
+        .swal2-html-container {
+            color: #dffaff !important;
+        }
+
+        .swal2-confirm {
+            background: linear-gradient(135deg, #00f2ff, #7f5cff) !important;
+            color: #020617 !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-header">
+        <h1>Login</h1>
+        <span></span>
+    </div>
+
+    <div class="login-body">
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Enter Username">
+            <div class="error-msg" id="username-error">Username is required</div>
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="password" placeholder="Enter Password">
+                <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('password', this)"></i>
+            </div>
+            <div class="error-msg" id="password-error">Password is required</div>
+        </div>
+
+        <div id="invalid-credentials" class="invalid-credentials">Invalid username or password</div>
+
+        <div class="forgot-password">
+            <a href="forgot_password.html">Forgot Password?</a>
+        </div>
+
+        <button class="login-btn" onclick="validateLogin()" id="loginBtn">LOGIN</button>
+
+        <div class="signup-section">
+            <p>Don't have an account?</p>
+            <a href="signup.html" class="signup-link">SIGN UP</a>
+        </div>
+    </div>
+</div>
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Initialize Supabase client
+const { createClient } = supabase;
+
+const supabaseClient = createClient(
+    "https://tmyrnjdwaayelrctqppg.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteXJuamR3YWF5ZWxyY3RxcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDgzODEsImV4cCI6MjA4Njg4NDM4MX0.w_DhdLWk4gA-x434kSobbXjG83IXHpakhRsaig-zMpw"
+);
+
+// Toggle password visibility
+function togglePasswordVisibility(inputId, iconElement) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        iconElement.classList.remove('fa-eye');
+        iconElement.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        iconElement.classList.remove('fa-eye-slash');
+        iconElement.classList.add('fa-eye');
+    }
+}
+
+// Hash password (for student & professor only)
+async function hashPassword(password) {
+    return CryptoJS.SHA256(password).toString();
+}
+
+// Loading state
+function setLoading(isLoading) {
+    const loginBtn = document.getElementById('loginBtn');
+    if (isLoading) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'LOGGING IN...';
+    } else {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'LOGIN';
+    }
+}
+
+// Main login
+async function validateLogin() {
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+    const invalidMsg = document.getElementById('invalid-credentials');
+    let valid = true;
+
+    invalidMsg.style.display = 'none';
+
+    if(username.value.trim() === '') {
+        document.getElementById('username-error').style.display = 'block';
+        valid = false;
+    } else {
+        document.getElementById('username-error').style.display = 'none';
+    }
+
+    if(password.value.trim() === '') {
+        document.getElementById('password-error').style.display = 'block';
+        valid = false;
+    } else {
+        document.getElementById('password-error').style.display = 'none';
+    }
+
+    if(!valid) return;
+
+    setLoading(true);
+
+    try {
+        const enteredUsername = username.value.trim();
+        const enteredPassword = password.value.trim();
+
+        // HASH for student & professor
+        const hashedPassword = await hashPassword(enteredPassword);
+
+        // ======================
+        // STUDENT LOGIN (HASHED)
+        // ======================
+        const { data: studentData } = await supabaseClient
+            .from('student')
+            .select('*')
+            .eq('uname', enteredUsername)
+            .eq('password', hashedPassword)
+            .maybeSingle();
+
+        if (studentData) {
+            localStorage.setItem('userId', studentData.id);
+            localStorage.setItem('userEmail', studentData.email);
+            localStorage.setItem('username', studentData.uname);
+            localStorage.setItem('userType', 'student');
+            localStorage.setItem('userFullName', `${studentData.fname} ${studentData.lname}`);
+            localStorage.setItem('isAdmin', 'false');
+
+            Swal.fire({
+                title: `Welcome ${studentData.fname}!`,
+                text: 'You have successfully logged in as Student.',
+                icon: 'success'
+            }).then(() => {
+                window.location.href = 'students_home.html';
+            });
+            return;
+        }
+
+        // =========================
+        // PROFESSOR LOGIN (HASHED)
+        // =========================
+        const { data: professorData } = await supabaseClient
+            .from('professor')
+            .select('*')
+            .eq('uname', enteredUsername)
+            .eq('password', hashedPassword)
+            .maybeSingle();
+
+        if (professorData) {
+            localStorage.setItem('userId', professorData.uid);
+            localStorage.setItem('userEmail', professorData.email);
+            localStorage.setItem('username', professorData.uname);
+            localStorage.setItem('userType', 'professor');
+            localStorage.setItem('userFullName', `${professorData.fname} ${professorData.lname}`);
+            localStorage.setItem('isAdmin', 'false');
+
+            Swal.fire({
+                title: `Welcome Professor ${professorData.lname}!`,
+                text: 'You have successfully logged in as Professor.',
+                icon: 'success'
+            }).then(() => {
+                window.location.href = 'teachers_home.html';
+            });
+            return;
+        }
+
+        // ======================
+        // ADMIN LOGIN (HASHED but still compared as hashed for consistency)
+        // ======================
+        const { data: adminData } = await supabaseClient
+            .from('admin')
+            .select('*')
+            .eq('uname', enteredUsername)
+            .eq('password', hashedPassword)
+            .maybeSingle();
+
+        if (adminData) {
+            localStorage.setItem('userId', adminData.id);
+            localStorage.setItem('userEmail', adminData.email);
+            localStorage.setItem('username', adminData.uname);
+            localStorage.setItem('userType', 'admin');
+            localStorage.setItem('userFullName', adminData.name || 'Administrator');
+            localStorage.setItem('isAdmin', 'true');
+
+            Swal.fire({
+                title: 'Welcome Admin!',
+                text: 'You have successfully logged in as Administrator.',
+                icon: 'success'
+            }).then(() => {
+                window.location.href = 'admin_home.html';
+            });
+            return;
+        }
+
+        invalidMsg.style.display = 'block';
+
+        Swal.fire({
+            title: 'Login Failed',
+            text: 'Invalid username or password.',
+            icon: 'error'
+        });
+
+        password.value = '';
+        password.focus();
+
+    } catch (error) {
+        Swal.fire({
+            title: 'Error',
+            text: 'An error occurred during login.',
+            icon: 'error'
+        });
+    } finally {
+        setLoading(false);
+    }
+}
+
+// Enter key support
+document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        validateLogin();
+    }
+});
+
+// Auto redirect if already logged in
+document.addEventListener('DOMContentLoaded', function() {
+    const userType = localStorage.getItem('userType');
+    if (userType === 'student') {
+        window.location.href = 'students_home.html';
+    } else if (userType === 'professor') {
+        window.location.href = 'teachers_home.html';
+    } else if (userType === 'admin') {
+        window.location.href = 'admin_home.html';
+    }
+});
+</script>
+
+</body>
+</html>
