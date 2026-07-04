@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Student Management | ADV-Attendify</title>
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="images/websitelogo.png">
+
+<!-- Supabase Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ===== ORIGINAL STYLES (PRESERVED) ===== */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body{
+    min-height:100vh;
+    overflow-x:hidden;
+    background:url("images/backgroundhome.png") center/cover no-repeat fixed;
+}
+
+/* Sidebar container - matches admin_home.html */
+#sidebarContainer {
+    position: relative;
+    z-index: 1002;
+}
+
+nav{
+    position:fixed;
+    top:0;
+    width:100%;
+    padding:20px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(0,0,0,0.25);
+    backdrop-filter:blur(8px);
+    z-index:1001;
+}
+
+.menu-btn{
+    font-size:28px;
+    background:none;
+    border:none;
+    color:#6fe3ff;
+    cursor:pointer;
+}
+
+.notification-wrapper {
+    position: relative;
+    margin-right: 15px;
+}
+
+.notification-bell {
+    font-size: 24px;
+    color: #6fe3ff;
+    cursor: pointer;
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    min-width: 18px;
+    text-align: center;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    width: 400px;
+    max-width: calc(100vw - 20px);
+    background: #0b2a3a;
+    border-radius: 12px;
+    border: 1px solid #6fe3ff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: none;
+    z-index: 1003;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.notification-dropdown.active {
+    display: block;
+}
+
+.notification-header {
+    padding: 15px;
+    border-bottom: 1px solid #2c5a6e;
+    color: #6fe3ff;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: #0b2a3a;
+}
+
+.batch-actions {
+    padding: 15px;
+    border-bottom: 1px solid #2c5a6e;
+}
+
+.batch-select-all {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: #dffaff;
+}
+
+.batch-select-all input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6fe3ff;
+}
+
+.batch-enroll-btn {
+    background: linear-gradient(135deg, #00f2ff, #7f5cff);
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    color: #020617;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    border: 1px solid #6fe3ff;
+}
+
+.batch-enroll-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #1a4a5a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-item:hover {
+    background: rgba(110, 243, 255, 0.1);
+}
+
+.notification-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6fe3ff;
+}
+
+.student-info {
+    flex: 1;
+}
+
+.student-name {
+    color: #dffaff;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.student-id-badge {
+    color: #6fe3ff;
+    font-size: 0.8rem;
+    background: rgba(110,243,255,0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.student-meta {
+    color: #6c8a9a;
+    font-size: 0.8rem;
+    margin-top: 3px;
+}
+
+.profile-wrapper{
+    position:relative;
+}
+
+.profile{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    overflow:hidden;
+    cursor:pointer;
+    border:2px solid #6fe3ff;
+}
+
+.profile img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.profile-menu{
+    position:absolute;
+    top:55px;
+    right:0;
+    background:#0b2a3a;
+    border-radius:12px;
+    padding:10px 0;
+    min-width:170px;
+    opacity:0;
+    pointer-events:none;
+    transition:0.25s;
+    z-index:1002;
+}
+
+.profile-menu.active{
+    opacity:1;
+    pointer-events:all;
+}
+
+.profile-menu a{
+    display:block;
+    padding:12px 20px;
+    color:#dffaff;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.profile-menu a:hover{
+    background:#1ea7d7;
+    color:#00141c;
+}
+
+.hero{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:120px 40px 40px;
+}
+
+.main-panel{
+    width:100%;
+    max-width:1400px;
+    padding:35px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(14px);
+    border-radius:26px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+
+.header-section{
+    text-align:center;
+    margin-bottom:30px;
+    color:#fff;
+}
+
+.header-section h1{
+    font-size:2.5rem;
+    color:#6fe3ff;
+    margin-bottom:10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stat-card {
+    background: rgba(11,42,58,0.8);
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid rgba(110,243,255,0.3);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #00f2ff, #7f5cff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #020617;
+}
+
+.stat-info h3 {
+    color: #9bbaca;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.stat-info p {
+    color: #6fe3ff;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.quick-action-btn {
+    background: rgba(11,42,58,0.8);
+    border: 1px solid #6fe3ff;
+    border-radius: 12px;
+    padding: 12px 25px;
+    color: #dffaff;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quick-action-btn:hover {
+    background: #1ea7d7;
+    color: #00141c;
+}
+
+.quick-action-btn.danger {
+    border-color: #ff7b7b;
+    color: #ffb3b3;
+}
+
+.quick-action-btn.danger:hover {
+    background: #c44a4a;
+    color: white;
+}
+
+.sections-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.sections-header h2 {
+    color: #226f83;
+    font-size: 1.8rem;
+}
+
+.sections-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.section-card {
+    background: rgba(11,42,58,0.8);
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid rgba(110,243,255,0.3);
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+}
+
+.section-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,242,255,0.2);
+    border-color: #6fe3ff;
+}
+
+.section-card.selected {
+    border: 2px solid #6fe3ff;
+    box-shadow: 0 0 20px rgba(110,243,255,0.3);
+}
+
+.section-header {
+    margin-bottom: 15px;
+}
+
+.section-name {
+    color: #6fe3ff;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.section-stats {
+    color: #9bbaca;
+    font-size: 0.9rem;
+    border-top: 1px solid #2c5a6e;
+    padding-top: 15px;
+}
+
+.students-section {
+    background: rgba(11,42,58,0.8);
+    border-radius: 18px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.students-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.students-header h3 {
+    color: #6fe3ff;
+    font-size: 1.5rem;
+}
+
+.student-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.student-table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+    background: rgba(0,20,28,0.6);
+}
+
+.students-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.students-table th {
+    background: #0b2a3a;
+    color: #6fe3ff;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #6fe3ff;
+}
+
+.students-table td {
+    padding: 12px 15px;
+    color: #dffaff;
+    border-bottom: 1px solid rgba(110,243,255,0.1);
+}
+
+.students-table tbody tr {
+    cursor: pointer;
+}
+
+.students-table tbody tr:hover {
+    background: rgba(110,243,255,0.1);
+}
+
+.student-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #6fe3ff;
+}
+
+.student-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00f2ff, #7f5cff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #020617;
+    font-weight: 600;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    color: #6fe3ff;
+    cursor: pointer;
+    padding: 5px 10px;
+    margin: 0 2px;
+    border-radius: 6px;
+}
+
+.action-btn.drop {
+    color: #ff7b7b;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: #0c2c3a;
+    border-radius: 30px;
+    padding: 30px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid #6fe3ff;
+}
+
+.modal-content h2 {
+    color: #6fe3ff;
+    margin-bottom: 20px;
+}
+
+.btn-primary {
+    background: #1ea7d7;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: #00141c;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #6fe3ff;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid #6fe3ff;
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: #dffaff;
+    cursor: pointer;
+}
+
+.btn-danger {
+    background: transparent;
+    border: 1px solid #ff7b7b;
+    color: #ffb3b3;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+
+.btn-success {
+    background: rgba(40,167,69,0.2);
+    border: 1px solid #28a745;
+    color: #9fdfaf;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #9bbaca;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #6fe3ff;
+}
+
+.loading i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Autocomplete styles */
+.autocomplete-container {
+    position: relative;
+    width: 100%;
+}
+
+.autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #0c2c3a;
+    border: 1px solid #6fe3ff;
+    border-radius: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1004;
+    display: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.autocomplete-suggestions.active {
+    display: block;
+}
+
+.autocomplete-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #1a4a5a;
+    color: #dffaff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.autocomplete-item:hover {
+    background: rgba(110, 243, 255, 0.1);
+}
+
+.autocomplete-item .student-id {
+    color: #6fe3ff;
+    font-size: 0.9rem;
+    background: rgba(110,243,255,0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.batch-student-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #2c5a6e;
+    color: #dffaff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.batch-student-item .student-id {
+    color: #6fe3ff;
+    font-size: 0.9rem;
+    background: rgba(110,243,255,0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+/* Custom SweetAlert2 styling */
+.swal2-popup {
+    background: #0b2a3a !important;
+    border-radius: 22px !important;
+    border: 1px solid rgba(110, 243, 255, 0.25) !important;
+}
+
+.swal2-title {
+    color: #6ef3ff !important;
+}
+
+.swal2-html-container {
+    color: #dffaff !important;
+}
+
+.swal2-confirm {
+    background: linear-gradient(135deg, #00f2ff, #7f5cff) !important;
+    color: #020617 !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+}
+
+.swal2-cancel {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #dffaff !important;
+    border: 2px solid #6ef3ff !important;
+    border-radius: 12px !important;
+}
+
+/* ===== ENHANCED MOBILE RESPONSIVE STYLES (ORIGINAL) ===== */
+
+/* Nav responsive */
+@media (max-width: 1024px) { nav { padding: 18px 30px; } }
+@media (max-width: 768px)  { nav { padding: 15px 20px; } }
+@media (max-width: 600px)  { nav { padding: 12px 15px; } }
+@media (max-width: 480px)  { nav { padding: 10px 12px; } }
+@media (max-width: 360px)  { nav { padding: 8px 10px; } }
+
+@media (max-width: 1024px) { .menu-btn { font-size: 26px; } }
+@media (max-width: 768px)  { .menu-btn { font-size: 24px; } }
+@media (max-width: 600px)  { .menu-btn { font-size: 22px; } }
+@media (max-width: 480px)  { .menu-btn { font-size: 20px; } }
+@media (max-width: 360px)  { .menu-btn { font-size: 18px; } }
+
+@media (max-width: 1024px) { .profile { width: 38px; height: 38px; } }
+@media (max-width: 768px)  { .profile { width: 35px; height: 35px; } }
+@media (max-width: 600px)  { .profile { width: 32px; height: 32px; } }
+@media (max-width: 480px)  { .profile { width: 30px; height: 30px; border-width: 1.5px; } }
+@media (max-width: 360px)  { .profile { width: 28px; height: 28px; } }
+
+@media (max-width: 768px)  { .profile-menu { top: 48px; min-width: 150px; } }
+@media (max-width: 600px)  { .profile-menu { top: 45px; min-width: 140px; } }
+@media (max-width: 480px)  { .profile-menu { top: 42px; min-width: 130px; } }
+@media (max-width: 360px)  { .profile-menu { top: 38px; min-width: 120px; } }
+@media (max-width: 768px)  { .profile-menu a { padding: 10px 18px; font-size: 13px; } }
+@media (max-width: 600px)  { .profile-menu a { padding: 9px 16px; font-size: 12.5px; } }
+@media (max-width: 480px)  { .profile-menu a { padding: 8px 14px; font-size: 12px; } }
+
+/* Hero/Main Content responsive */
+@media (max-width: 1024px) { .hero { padding: 110px 25px 30px; } }
+@media (max-width: 768px)  { .hero { padding: 100px 20px 20px; } }
+@media (max-width: 600px)  { .hero { padding: 85px 15px 15px; } }
+@media (max-width: 480px)  { .hero { padding: 75px 12px 12px; } }
+@media (max-width: 360px)  { .hero { padding: 65px 10px 10px; } }
+
+@media (max-width: 1024px) { .main-panel { padding: 25px; border-radius: 22px; } }
+@media (max-width: 768px)  { .main-panel { padding: 20px; border-radius: 18px; } }
+@media (max-width: 600px)  { .main-panel { padding: 16px; border-radius: 16px; } }
+@media (max-width: 480px)  { .main-panel { padding: 14px; border-radius: 14px; } }
+@media (max-width: 360px)  { .main-panel { padding: 12px; border-radius: 12px; } }
+
+@media (max-width: 768px) { .header-section h1 { font-size: 2rem; } }
+@media (max-width: 600px) { .header-section h1 { font-size: 1.6rem; } }
+@media (max-width: 480px) { .header-section h1 { font-size: 1.4rem; } }
+@media (max-width: 360px) { .header-section h1 { font-size: 1.2rem; } }
+@media (max-width: 600px) { .header-section p { font-size: 0.85rem; } }
+
+/* Stats grid responsive */
+@media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr; gap: 15px; }
+    .stat-card { padding: 15px; gap: 12px; }
+    .stat-icon { width: 45px; height: 45px; font-size: 20px; }
+    .stat-info p { font-size: 1.5rem; }
+    .stat-info h3 { font-size: 0.85rem; }
+}
+
+/* Quick actions responsive */
+@media (max-width: 768px) {
+    .quick-actions { flex-direction: column; gap: 12px; }
+    .quick-action-btn { justify-content: center; padding: 10px 20px; font-size: 0.9rem; }
+}
+@media (max-width: 480px) {
+    .quick-action-btn { padding: 8px 16px; font-size: 0.85rem; }
+}
+
+/* Sections grid responsive */
+@media (max-width: 1024px) { .sections-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; } }
+@media (max-width: 768px)  { .sections-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; } }
+@media (max-width: 600px)  { .sections-grid { grid-template-columns: 1fr; gap: 12px; } }
+
+@media (max-width: 1024px) { .section-card { padding: 18px; border-radius: 16px; } }
+@media (max-width: 768px)  { .section-card { padding: 15px; border-radius: 14px; } }
+@media (max-width: 600px)  { .section-card { padding: 14px; border-radius: 12px; } }
+
+@media (max-width: 768px)  { .section-name { font-size: 1.1rem; } }
+@media (max-width: 600px)  { .section-name { font-size: 1rem; } }
+
+/* Students section responsive */
+@media (max-width: 768px) {
+    .students-section { padding: 15px; border-radius: 14px; }
+    .students-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .students-header h3 { font-size: 1.2rem; }
+    .student-actions { width: 100%; justify-content: space-between; }
+    .student-actions button { flex: 1; text-align: center; justify-content: center; font-size: 0.85rem; padding: 8px 12px; }
+}
+
+/* Table responsive */
+@media (max-width: 768px) {
+    .student-table-container { border-radius: 10px; }
+    .students-table th, .students-table td { padding: 10px 8px; font-size: 0.85rem; }
+    .students-table { min-width: 550px; }
+}
+@media (max-width: 600px) {
+    .student-table-container { border-radius: 8px; }
+    .students-table th, .students-table td { padding: 8px 6px; font-size: 0.78rem; }
+    .students-table { min-width: 480px; }
+    .student-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+    .action-btn { padding: 4px 6px; font-size: 0.7rem; }
+}
+
+/* Notification dropdown responsive */
+@media (max-width: 768px) {
+    .notification-dropdown {
+        position: fixed;
+        top: 70px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-width: 100%;
+        max-height: 70vh;
+        border-radius: 14px;
+    }
+    .notification-header { padding: 12px; font-size: 0.9rem; }
+    .notification-item { padding: 10px 12px; gap: 8px; }
+    .student-name { font-size: 0.85rem; }
+    .student-id-badge { font-size: 0.7rem; }
+    .batch-enroll-btn { font-size: 0.85rem; }
+}
+
+/* Modal responsive */
+@media (max-width: 1024px) { .modal-content { padding: 25px; border-radius: 28px; } }
+@media (max-width: 768px) { .modal-content { padding: 20px; border-radius: 24px; width: 95%; max-width: 95%; } }
+@media (max-width: 600px) { .modal-content { padding: 18px; border-radius: 20px; } }
+@media (max-width: 480px) { .modal-content { padding: 16px; border-radius: 18px; } }
+
+@media (max-width: 768px) { .modal-content h2 { font-size: 1.3rem; margin-bottom: 16px; } }
+@media (max-width: 480px) { .modal-content h2 { font-size: 1.2rem; } }
+
+@media (max-width: 600px) { .modal-actions { flex-wrap: wrap; gap: 10px; } }
+@media (max-width: 480px) { .modal-actions button { flex: 1; min-width: 100px; padding: 8px 12px; font-size: 0.85rem; } }
+
+/* Form inputs responsive */
+@media (max-width: 600px) {
+    input, select, button { font-size: 16px; /* Prevents zoom on iOS */ }
+}
+@media (max-width: 480px) {
+    input, select, button { font-size: 14px; }
+}
+
+/* Autocomplete responsive */
+@media (max-width: 768px) {
+    .autocomplete-item { padding: 10px 12px; font-size: 0.85rem; }
+    .autocomplete-item .student-id { font-size: 0.75rem; }
+}
+@media (max-width: 480px) {
+    .autocomplete-item { padding: 8px 10px; font-size: 0.8rem; }
+}
+
+/* Batch list responsive */
+@media (max-width: 600px) {
+    .batch-student-item { padding: 6px 10px; font-size: 0.85rem; }
+    .batch-student-item .student-id { font-size: 0.7rem; }
+}
+
+/* Sections header responsive */
+@media (max-width: 768px) { .sections-header h2 { font-size: 1.4rem; } }
+@media (max-width: 600px) { .sections-header h2 { font-size: 1.2rem; } }
+@media (max-width: 480px) { .sections-header h2 { font-size: 1.1rem; } }
+</style>
+</head>
+<body>
+
+<div id="sidebarContainer"></div>
+
+<nav>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <div style="display: flex; align-items: center;">
+        <div class="notification-wrapper">
+            <div class="notification-bell" onclick="toggleNotifications()">
+                <i class="fas fa-user-plus"></i>
+                <span class="notification-badge" id="notificationBadge">0</span>
+            </div>
+            <div class="notification-dropdown" id="notificationDropdown">
+                <div class="notification-header"><span>Unassigned Students</span><span style="font-size:0.8rem;cursor:pointer;" onclick="refreshUnassignedList()"><i class="fas fa-sync-alt"></i> Refresh</span></div>
+                <div class="batch-actions">
+                    <div class="batch-select-all"><input type="checkbox" id="selectAllUnassigned" onchange="toggleSelectAllUnassigned()"><label for="selectAllUnassigned">Select All</label></div>
+                    <button class="batch-enroll-btn" id="batchEnrollBtn" onclick="openBatchEnrollModal()" disabled><i class="fas fa-graduation-cap"></i> Enroll Selected</button>
+                </div>
+                <div id="unassignedList"></div>
+            </div>
+        </div>
+        <div class="profile-wrapper">
+            <div class="profile" onclick="toggleProfileMenu()"><img src="images/profile.png" id="navProfileImage"></div>
+            <div id="profileMenu" class="profile-menu"><a href="admin_profile.html">Edit Profile</a><a onclick="confirmLogout()">Logout</a></div>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="main-panel">
+        <div class="header-section"><h1>Student Management</h1><p>Manage BSCPE sections and students</p></div>
+        <div class="stats-grid"><div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-info"><h3>Total Students</h3><p id="totalStudents">0</p></div></div><div class="stat-card"><div class="stat-icon"><i class="fas fa-layer-group"></i></div><div class="stat-info"><h3>Total Sections</h3><p id="totalSections">0</p></div></div></div>
+        <div class="quick-actions">
+            <button class="quick-action-btn" onclick="openAddStudentModal()"><i class="fas fa-user-plus"></i> Add Student</button>
+            <button class="quick-action-btn" onclick="openAddSectionModal()"><i class="fas fa-plus-circle"></i> Add Section</button>
+            <button class="quick-action-btn" onclick="openPromoteWholeSectionModal()"><i class="fas fa-users"></i> Promote Section</button>
+            <button class="quick-action-btn danger" onclick="openDeleteSectionModal()"><i class="fas fa-trash"></i> Delete Section</button>
+        </div>
+        <div class="sections-header"><h2>BSCPE Sections</h2></div>
+        <div class="sections-grid" id="sectionsGrid"><div class="loading"><i class="fas fa-spinner"></i> Loading sections...</div></div>
+        <div class="students-section" id="studentsSection" style="display: none;">
+            <div class="students-header"><h3 id="selectedSectionTitle">Students in Section</h3><div class="student-actions"><button class="btn-success" onclick="openPromoteSelectedModal()"><i class="fas fa-arrow-up"></i> Promote</button><button class="btn-danger" onclick="openDropSelectedModal()"><i class="fas fa-user-slash"></i> Drop</button><button class="btn-secondary" onclick="selectAllStudents()">Select All</button></div></div>
+            <div class="student-table-container"><table class="students-table"><thead><tr><th style="width:30px;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllStudents()"></th><th>Student Name</th><th>ID Number</th><th>Year Level</th><th>Actions</th></tr></thead><tbody id="studentsTableBody"></tbody></table></div>
+        </div>
+    </div>
+</section>
+
+<!-- Section Modal (letter + year) -->
+<div id="sectionModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+        <h2 id="sectionModalTitle">Add New Section</h2>
+        <div style="margin-bottom: 20px;">
+            <label style="color: #6fe3ff;">Section Letter</label>
+            <input type="text" id="sectionLetter" placeholder="e.g., A, B, C, D" maxlength="1" 
+                   style="width: 100%; padding: 12px; background: rgba(0,20,28,0.6); border: 1px solid #2c5a6e; border-radius: 12px; color: #dffaff; text-transform: uppercase;">
+            <small style="color: #9bbaca;">Single letter (A, B, C, etc.)</small>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <label style="color: #6fe3ff;">Year Level</label>
+            <select id="sectionYear" style="width: 100%; padding: 12px; background: rgba(0,20,28,0.6); border: 1px solid #2c5a6e; border-radius: 12px; color: #dffaff;">
+                <option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option>
+            </select>
+        </div>
+        <div class="modal-actions"><button class="btn-secondary" onclick="closeSectionModal()">Cancel</button><button class="btn-primary" onclick="saveSection()">Save</button></div>
+    </div>
+</div>
+
+<!-- Student Modal -->
+<div id="studentModal" class="modal"><div class="modal-content" style="max-width:500px;"><h2 id="studentModalTitle">Add Student to Section</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;"><div><label style="color:#6fe3ff;">First Name</label><div class="autocomplete-container"><input type="text" id="studentFname" autocomplete="off" oninput="searchUnassignedStudents()" onfocus="searchUnassignedStudents()" style="width:100%;padding:12px;background:rgba(0,20,28,0.6);border:1px solid #2c5a6e;border-radius:12px;color:#dffaff;"><div id="fnameSuggestions" class="autocomplete-suggestions"></div></div></div><div><label style="color:#6fe3ff;">Last Name</label><div class="autocomplete-container"><input type="text" id="studentLname" autocomplete="off" oninput="searchUnassignedStudents()" onfocus="searchUnassignedStudents()" style="width:100%;padding:12px;background:rgba(0,20,28,0.6);border:1px solid #2c5a6e;border-radius:12px;color:#dffaff;"><div id="lnameSuggestions" class="autocomplete-suggestions"></div></div></div></div><div style="margin-bottom:15px;"><label style="color:#6fe3ff;">Student ID</label><input type="text" id="studentId" readonly style="width:100%;padding:12px;background:rgba(0,20,28,0.6);border:1px solid #2c5a6e;border-radius:12px;color:#dffaff;cursor:not-allowed;opacity:0.7;"><small>Auto-filled</small></div><div style="margin-bottom:15px;"><label style="color:#6fe3ff;">Section</label><select id="studentSection" style="width:100%;padding:12px;background:rgba(0,20,28,0.6);border:1px solid #2c5a6e;border-radius:12px;color:#dffaff;"><option value="">Select Section</option></select></div><div class="modal-actions"><button class="btn-secondary" onclick="closeStudentModal()">Cancel</button><button class="btn-primary" onclick="saveStudent()">Enroll Student</button></div></div></div>
+
+<!-- Promote Modal (Individual) with filtered years -->
+<div id="promoteModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <h2>Promote Students</h2>
+        <div style="margin-bottom: 20px;">
+            <label style="color: #6fe3ff;">Promote to Year</label>
+            <select id="promoteToYear" onchange="updatePromoteDestinationSections()" style="width: 100%; padding: 12px; background: rgba(0,20,28,0.6); border: 1px solid #2c5a6e; border-radius: 12px; color: #dffaff;"></select>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <label style="color: #6fe3ff;">Destination Section</label>
+            <select id="promoteToSection" style="width: 100%; padding: 12px; background: rgba(0,20,28,0.6); border: 1px solid #2c5a6e; border-radius: 12px; color: #dffaff;"><option value="">Select Section</option></select>
+        </div>
+        <div style="background:rgba(255,193,7,0.1);border:1px solid #ffc107;border-radius:12px;padding:15px;margin-bottom:20px;"><p style="color:#ffd966;"><i class="fas fa-info-circle"></i> <span id="selectedStudentsCount">0 students</span> selected</p></div>
+        <div class="modal-actions"><button class="btn-secondary" onclick="closePromoteModal()">Cancel</button><button class="btn-success" onclick="promoteStudents()">Promote</button></div>
+    </div>
+</div>
+
+<!-- Promote Whole Section Modal with filtered years -->
+<div id="promoteWholeSectionModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <h2><i class="fas fa-users"></i> Promote Whole Section</h2>
+        <div style="margin-bottom: 20px;">
+            <label style="color: #6fe3ff;">Source Section</label>
+            <select id="sourceSection" onchange="updateSourceSectionInfo()" style="width: 100%; padding: 12px; background: rgba(0,20,28,0.6); border: 1px solid #2c5a6e; border-radius: 12px; color: #dffaff;"><option value="">Select Section</option></select>
+        </div>
+        <div id="sourceSectionInfo" style="background:rgba(110,243,255,0.1);border-radius:12px;padding:15px;margin-bottom:20px;display:none;"><p id="sourceSectionDetails" style="color:#6fe3ff;"></p></div>
+        <div style="margin-bottom: 20px;">
+            <label style="color: #6fe3ff;">Promote to Year</label>
+            <select id="promoteWholeToYear" onchange="updateDestinationSections()" style="width: 100%; padding: 12px; background: rgba(0,20,28,0.6); border: 1px solid #2c5a6e; border-radius: 12px; color: #dffaff;"></select>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <label style="color: #6fe3ff;">Destination Section</label>
+            <select id="destinationSection" style="width: 100%; padding: 12px; background: rgba(0,20,28,0.6); border: 1px solid #2c5a6e; border-radius: 12px; color: #dffaff;"><option value="">Select Section</option></select>
+        </div>
+        <div style="background:rgba(40,167,69,0.1);border:1px solid #28a745;border-radius:12px;padding:15px;margin-bottom:20px;"><p style="color:#9fdfaf;"><i class="fas fa-info-circle"></i> <span id="wholeSectionCount">0 students</span> will be promoted</p></div>
+        <div class="modal-actions"><button class="btn-secondary" onclick="closePromoteWholeSectionModal()">Cancel</button><button class="btn-success" onclick="promoteWholeSection()">Promote Section</button></div>
+    </div>
+</div>
+
+<!-- Drop & Batch Modals (unchanged) -->
+<div id="dropModal" class="modal"><div class="modal-content"><h2><i class="fas fa-user-slash" style="color:#ff7b7b;"></i> Drop Students</h2><div style="background:rgba(255,123,123,0.1);border:1px solid #ff7b7b;border-radius:12px;padding:15px;margin-bottom:20px;"><p style="color:#ffb3b3;"><i class="fas fa-exclamation-triangle"></i> <span id="dropStudentsCount">0 students</span> will be dropped</p></div><p style="color:#dffaff;margin-bottom:20px;">Dropped students will be removed from this section.</p><div class="modal-actions"><button class="btn-secondary" onclick="closeDropModal()">Cancel</button><button class="btn-danger" onclick="dropStudents()">Drop Students</button></div></div></div>
+<div id="batchEnrollModal" class="modal"><div class="modal-content"><h2>Batch Enroll Students</h2><div class="batch-list" id="batchStudentList" style="max-height:200px;overflow-y:auto;background:rgba(0,20,28,0.6);border-radius:12px;padding:10px;margin-bottom:20px;"></div><div style="margin-bottom:20px;"><label style="color:#6fe3ff;">Enroll to Section</label><select id="batchEnrollSection" style="width:100%;padding:12px;background:rgba(0,20,28,0.6);border:1px solid #2c5a6e;border-radius:12px;color:#dffaff;"><option value="">Select Section</option></select></div><div class="modal-actions"><button class="btn-secondary" onclick="closeBatchEnrollModal()">Cancel</button><button class="btn-success" onclick="processBatchEnrollment()">Enroll Selected</button></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const { createClient } = supabase;
+    const supabaseClient = createClient("https://tmyrnjdwaayelrctqppg.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteXJuamR3YWF5ZWxyY3RxcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDgzODEsImV4cCI6MjA4Njg4NDM4MX0.w_DhdLWk4gA-x434kSobbXjG83IXHpakhRsaig-zMpw");
+    let sections = [], enrolledStudents = [], unassignedStudents = [], selectedSectionId = null, selectedStudents = [], selectedUnassigned = [];
+
+    document.addEventListener('DOMContentLoaded', async function(){ await loadSidebar(); loadProfileImage(); await loadSectionsFromDatabase(); await loadEnrolledStudents(); await loadUnassignedStudents(); updateStats(); renderSections(); renderUnassignedList(); });
+    function loadSidebar(){ fetch("admin_sidebar.html").then(r=>r.text()).then(html=>{ document.getElementById("sidebarContainer").innerHTML = html; const sidebar = document.getElementById("sidebar"), overlay = document.getElementById("overlay"); if(sidebar&&overlay){ window.toggleMenu = ()=>{ sidebar.classList.toggle("active"); overlay.classList.toggle("active"); }; overlay.onclick = toggleMenu; } }); }
+    function loadProfileImage(){ const saved = localStorage.getItem('profileImage'); if(saved) document.getElementById('navProfileImage').src = saved; }
+    async function loadSectionsFromDatabase(){ try{ const { data, error } = await supabaseClient.from('list_of_year-section').select('*').order('year-section'); if(error) throw error; sections = (data||[]).map(item=>{ const code = item['year-section']; const year = parseInt(code.charAt(0))||1; return { id:item.id, name:`BSCPE ${code}`, year:year, sectionCode:code }; }); } catch(e){ sections=[]; Swal.fire({title:'Error',text:'Failed to load sections',icon:'error',background:'#0b2a3a'}); } }
+    async function loadEnrolledStudents(){ const { data } = await supabaseClient.from('year-section').select('*'); enrolledStudents = data||[]; }
+    async function loadUnassignedStudents(){ const { data } = await supabaseClient.from('student').select('*').is('year-section',null).order('lname'); unassignedStudents = data||[]; }
+    function searchUnassignedStudents(){ const fname = document.getElementById('studentFname').value.toLowerCase(), lname = document.getElementById('studentLname').value.toLowerCase(); const filtered = unassignedStudents.filter(s=>(fname===''||s.fname.toLowerCase().includes(fname))&&(lname===''||s.lname.toLowerCase().includes(lname))).slice(0,10); const html = filtered.map(s=>`<div class="autocomplete-item" onclick="selectUnassignedStudent('${s.id}')"><span>${s.fname} ${s.lname}</span><span class="student-id">${s.id}</span></div>`).join(''); document.getElementById('fnameSuggestions').innerHTML = html; document.getElementById('lnameSuggestions').innerHTML = html; const cls = filtered.length?'active':''; document.getElementById('fnameSuggestions').className = `autocomplete-suggestions ${cls}`; document.getElementById('lnameSuggestions').className = `autocomplete-suggestions ${cls}`; }
+    function selectUnassignedStudent(id){ const s = unassignedStudents.find(st=>st.id===id); if(s){ document.getElementById('studentFname').value = s.fname; document.getElementById('studentLname').value = s.lname; document.getElementById('studentId').value = s.id; document.getElementById('fnameSuggestions').classList.remove('active'); document.getElementById('lnameSuggestions').classList.remove('active'); } }
+    function toggleNotifications(){ document.getElementById('notificationDropdown').classList.toggle('active'); if(document.getElementById('notificationDropdown').classList.contains('active')) renderUnassignedList(); }
+    function renderUnassignedList(){ const container = document.getElementById('unassignedList'); document.getElementById('notificationBadge').textContent = unassignedStudents.length; if(unassignedStudents.length===0){ container.innerHTML='<div class="empty-state"><i class="fas fa-user-check"></i><p>No unassigned students</p></div>'; return; } container.innerHTML = unassignedStudents.map(s=>`<div class="notification-item"><input type="checkbox" ${selectedUnassigned.includes(s.id)?'checked':''} onchange="toggleUnassignedSelection('${s.id}')"><div class="student-info"><div class="student-name">${s.lname}, ${s.fname}</div><div><span class="student-id-badge">${s.id}</span></div></div></div>`).join(''); }
+    function toggleUnassignedSelection(id){ const idx = selectedUnassigned.indexOf(id); idx===-1?selectedUnassigned.push(id):selectedUnassigned.splice(idx,1); document.getElementById('batchEnrollBtn').disabled = selectedUnassigned.length===0; }
+    function toggleSelectAllUnassigned(){ const cb = document.getElementById('selectAllUnassigned'); selectedUnassigned = cb.checked?unassignedStudents.map(s=>s.id):[]; renderUnassignedList(); }
+    function refreshUnassignedList(){ loadUnassignedStudents().then(()=>{ renderUnassignedList(); Swal.fire({title:'Refreshed',text:'List updated',icon:'success',timer:1500,background:'#0b2a3a',showConfirmButton:false}); }); }
+    function openBatchEnrollModal(){ if(selectedUnassigned.length===0) return; const selectedData = unassignedStudents.filter(s=>selectedUnassigned.includes(s.id)); document.getElementById('batchStudentList').innerHTML = selectedData.map(s=>`<div class="batch-student-item"><span>${s.lname}, ${s.fname}</span><span class="student-id">${s.id}</span></div>`).join(''); const select = document.getElementById('batchEnrollSection'); select.innerHTML = '<option value="">Select Section</option>'+sections.map(s=>`<option value="${s.sectionCode}">${s.name}</option>`).join(''); document.getElementById('batchEnrollModal').classList.add('active'); }
+    function closeBatchEnrollModal(){ document.getElementById('batchEnrollModal').classList.remove('active'); }
+    async function processBatchEnrollment(){ const sectionCode = document.getElementById('batchEnrollSection').value; if(!sectionCode){ Swal.fire({title:'Error',text:'Select a section',icon:'error',background:'#0b2a3a'}); return; } const selectedData = unassignedStudents.filter(s=>selectedUnassigned.includes(s.id)); const section = sections.find(s=>s.sectionCode===sectionCode); try{ Swal.fire({title:'Enrolling...',allowOutsideClick:false,didOpen:()=>Swal.showLoading(),background:'#0b2a3a'}); for(const s of selectedData){ await supabaseClient.from('year-section').insert([{'student-id':s.id,'student-name':`${s.fname} ${s.lname}`,'year-section':sectionCode}]); await supabaseClient.from('student').update({'year-section':sectionCode}).eq('id',s.id); } enrolledStudents.push(...selectedData.map(s=>({'student-id':s.id,'student-name':`${s.fname} ${s.lname}`,'year-section':sectionCode}))); unassignedStudents = unassignedStudents.filter(s=>!selectedUnassigned.includes(s.id)); selectedUnassigned = []; renderUnassignedList(); if(selectedSectionId===section?.sectionCode) renderStudents(selectedSectionId); updateStats(); closeBatchEnrollModal(); Swal.fire({title:'Success',text:`Enrolled ${selectedData.length} students`,icon:'success',timer:2000,background:'#0b2a3a',showConfirmButton:false}); } catch(e){ Swal.fire({title:'Error',text:e.message,icon:'error',background:'#0b2a3a'}); } }
+    function renderSections(){ const grid = document.getElementById('sectionsGrid'); if(sections.length===0){ grid.innerHTML='<div class="empty-state"><i class="fas fa-layer-group"></i><h3>No sections yet</h3><p>Click "Add Section" to create one</p></div>'; return; } grid.innerHTML = sections.map(s=>{ const cnt = enrolledStudents.filter(st=>st['year-section']===s.sectionCode).length; return `<div class="section-card ${selectedSectionId===s.sectionCode?'selected':''}" onclick="selectSection('${s.sectionCode}')"><div class="section-header"><span class="section-name">${s.name}</span></div><div class="section-stats"><span><i class="fas fa-users"></i> ${cnt} students</span></div></div>`; }).join(''); updateSectionDropdowns(); }
+    function selectSection(code){ const sec = sections.find(s=>s.sectionCode===code); if(!sec) return; selectedSectionId = code; selectedStudents = []; document.getElementById('selectAllCheckbox').checked = false; renderSections(); renderStudents(code); document.getElementById('studentsSection').style.display = 'block'; document.getElementById('selectedSectionTitle').textContent = `Students in ${sec.name}`; }
+    function renderStudents(code){ const tbody = document.getElementById('studentsTableBody'); const sec = sections.find(s=>s.sectionCode===code); if(!sec){ tbody.innerHTML='<tr><td colspan="5" class="empty-state">Section error</td></tr>'; return; } const list = enrolledStudents.filter(s=>s['year-section']===code); if(list.length===0){ tbody.innerHTML='<tr><td colspan="5" class="empty-state"><i class="fas fa-users-slash"></i><h3>No students</h3><p>Click "Add" to enroll</p></td></tr>'; return; } tbody.innerHTML = list.map(st=>{ const full = st['student-name']||'Unknown'; const parts = full.split(' '); const f = parts[0]||''; const l = parts.slice(1).join(' ')||''; const init = (f.charAt(0)+(l.charAt(0)||'')).toUpperCase(); return `<tr><td onclick="event.stopPropagation()"><input type="checkbox" class="student-checkbox" ${selectedStudents.includes(st['student-id'])?'checked':''} onchange="toggleStudentSelection('${st['student-id']}')"></td><td><div style="display:flex;align-items:center;gap:10px;"><div class="student-avatar">${init}</div>${full}</div></td><td>${st['student-id']||'N/A'}</td><td>Year ${sec.year}</td><td onclick="event.stopPropagation()"><button class="action-btn drop" onclick="openDropStudentModal('${st['student-id']}')"><i class="fas fa-user-slash"></i></button></td></tr>`; }).join(''); }
+    function toggleStudentSelection(id){ const idx = selectedStudents.indexOf(id); idx===-1?selectedStudents.push(id):selectedStudents.splice(idx,1); }
+    function toggleSelectAllStudents(){ const sec = sections.find(s=>s.sectionCode===selectedSectionId); if(!sec) return; const list = enrolledStudents.filter(s=>s['year-section']===sec.sectionCode); const cb = document.getElementById('selectAllCheckbox'); selectedStudents = cb.checked?list.map(s=>s['student-id']):[]; renderStudents(selectedSectionId); }
+    function selectAllStudents(){ const sec = sections.find(s=>s.sectionCode===selectedSectionId); if(!sec) return; selectedStudents = enrolledStudents.filter(s=>s['year-section']===sec.sectionCode).map(s=>s['student-id']); renderStudents(selectedSectionId); document.getElementById('selectAllCheckbox').checked = true; }
+    function openAddSectionModal(){ document.getElementById('sectionModalTitle').textContent = 'Add New Section'; document.getElementById('sectionLetter').value = ''; document.getElementById('sectionYear').value = '1'; document.getElementById('sectionModal').classList.add('active'); }
+    function closeSectionModal(){ document.getElementById('sectionModal').classList.remove('active'); }
+    async function saveSection(){ const letter = document.getElementById('sectionLetter').value.trim().toUpperCase(); const yearVal = document.getElementById('sectionYear').value; if(!letter||!/^[A-Z]$/.test(letter)){ Swal.fire({title:'Invalid',text:'Enter a single letter A-Z',icon:'error',background:'#0b2a3a'}); return; } const sectionCode = `${yearVal}${letter}`; if(sections.find(s=>s.sectionCode===sectionCode)){ Swal.fire({title:'Exists',text:`Section BSCPE ${sectionCode} already exists`,icon:'error',background:'#0b2a3a'}); return; } try{ Swal.fire({title:'Saving...',allowOutsideClick:false,didOpen:()=>Swal.showLoading(),background:'#0b2a3a'}); const { data, error } = await supabaseClient.from('list_of_year-section').insert([{'year-section':sectionCode}]).select(); if(error) throw error; const newSec = { id:data[0].id, name:`BSCPE ${sectionCode}`, year:parseInt(yearVal), sectionCode:sectionCode }; sections.push(newSec); renderSections(); updateStats(); closeSectionModal(); Swal.fire({title:'Success',text:`Section ${newSec.name} created`,icon:'success',timer:2000,background:'#0b2a3a',showConfirmButton:false}); } catch(e){ Swal.fire({title:'Error',text:e.message,icon:'error',background:'#0b2a3a'}); } }
+    function openDeleteSectionModal(){ if(!selectedSectionId){ Swal.fire({title:'No Section Selected',text:'Please select a section to delete',icon:'warning',background:'#0b2a3a'}); return; } const section = sections.find(s=>s.sectionCode===selectedSectionId); const count = enrolledStudents.filter(s=>s['year-section']===section.sectionCode).length; Swal.fire({title:'⚠️ Delete Section?',html:`<div><p><strong>${section.name}</strong></p><div style="background:rgba(255,123,123,0.1);border-radius:12px;padding:15px"><p><strong>${count}</strong> student(s) will be moved to unassigned</p></div><p style="color:#ff7b7b;">Cannot be undone!</p></div>`,icon:'warning',showCancelButton:true,confirmButtonColor:'#c44a4a',confirmButtonText:'Yes, delete',background:'#0b2a3a'}).then(async res=>{ if(res.isConfirmed) await deleteSection(section); }); }
+    async function deleteSection(section){ try{ Swal.fire({title:'Deleting...',allowOutsideClick:false,showConfirmButton:false,background:'#0b2a3a'}); const studentsIn = enrolledStudents.filter(s=>s['year-section']===section.sectionCode); for(const st of studentsIn){ await supabaseClient.from('student').update({'year-section':null}).eq('id',st['student-id']); } await supabaseClient.from('year-section').delete().eq('year-section',section.sectionCode); await supabaseClient.from('list_of_year-section').delete().eq('year-section',section.sectionCode); enrolledStudents = enrolledStudents.filter(s=>s['year-section']!==section.sectionCode); sections = sections.filter(s=>s.sectionCode!==section.sectionCode); if(selectedSectionId===section.sectionCode){ selectedSectionId=null; document.getElementById('studentsSection').style.display='none'; } selectedStudents=[]; await loadUnassignedStudents(); renderSections(); renderUnassignedList(); updateStats(); Swal.fire({title:'Deleted',text:`${section.name} removed`,icon:'success',timer:2000,background:'#0b2a3a',showConfirmButton:false}); } catch(e){ Swal.fire({title:'Error',text:e.message,icon:'error',background:'#0b2a3a'}); } }
+    function openAddStudentModal(){ document.getElementById('studentModalTitle').textContent = 'Add Student to Section'; document.getElementById('studentFname').value=''; document.getElementById('studentLname').value=''; document.getElementById('studentId').value=''; if(selectedSectionId) document.getElementById('studentSection').value=selectedSectionId; else document.getElementById('studentSection').value=''; document.getElementById('studentModal').classList.add('active'); searchUnassignedStudents(); }
+    function closeStudentModal(){ document.getElementById('studentModal').classList.remove('active'); document.getElementById('fnameSuggestions').classList.remove('active'); document.getElementById('lnameSuggestions').classList.remove('active'); }
+    async function saveStudent(){ const fname = document.getElementById('studentFname').value, lname = document.getElementById('studentLname').value, sid = document.getElementById('studentId').value, secCode = document.getElementById('studentSection').value; if(!fname||!lname||!sid||!secCode){ Swal.fire({title:'Error',text:'Select a student and section',icon:'error',background:'#0b2a3a'}); return; } const studentExists = unassignedStudents.find(s=>s.id===sid); if(!studentExists){ Swal.fire({title:'Error',text:'Student not found or already enrolled',icon:'error',background:'#0b2a3a'}); return; } const section = sections.find(s=>s.sectionCode===secCode); if(!section){ Swal.fire({title:'Error',text:'Section not found',icon:'error',background:'#0b2a3a'}); return; } try{ Swal.fire({title:'Enrolling...',allowOutsideClick:false,didOpen:()=>Swal.showLoading(),background:'#0b2a3a'}); await supabaseClient.from('year-section').insert([{'student-id':sid,'student-name':`${fname} ${lname}`,'year-section':section.sectionCode}]); await supabaseClient.from('student').update({'year-section':section.sectionCode}).eq('id',sid); enrolledStudents.push({'student-id':sid,'student-name':`${fname} ${lname}`,'year-section':section.sectionCode}); unassignedStudents = unassignedStudents.filter(s=>s.id!==sid); if(selectedSectionId===section.sectionCode) renderStudents(selectedSectionId); renderSections(); renderUnassignedList(); updateStats(); closeStudentModal(); Swal.fire({title:'Success',text:`${fname} ${lname} added`,icon:'success',timer:2000,background:'#0b2a3a',showConfirmButton:false}); } catch(e){ Swal.fire({title:'Error',text:e.message,icon:'error',background:'#0b2a3a'}); } }
+    function openDropStudentModal(id){ const student = enrolledStudents.find(s=>s['student-id']===id); const sec = sections.find(s=>s.sectionCode===student?.['year-section']); Swal.fire({title:'Drop Student?',html:`<p>Drop <strong>${student?.['student-name']}</strong> from ${sec?.name}</p>`,icon:'warning',showCancelButton:true,confirmButtonColor:'#c44a4a',confirmButtonText:'Yes, drop',background:'#0b2a3a'}).then(res=>{ if(res.isConfirmed) dropSingleStudent(id); }); }
+    function openDropSelectedModal(){ if(selectedStudents.length===0){ Swal.fire({title:'No Students Selected',text:'Select students to drop',icon:'warning',background:'#0b2a3a'}); return; } document.getElementById('dropStudentsCount').textContent = `${selectedStudents.length} student(s)`; document.getElementById('dropModal').classList.add('active'); }
+    function closeDropModal(){ document.getElementById('dropModal').classList.remove('active'); }
+    async function dropStudents(){ const toDrop = enrolledStudents.filter(s=>selectedStudents.includes(s['student-id'])); try{ Swal.fire({title:'Dropping...',allowOutsideClick:false,didOpen:()=>Swal.showLoading(),background:'#0b2a3a'}); for(const st of toDrop){ await supabaseClient.from('year-section').delete().eq('student-id',st['student-id']); await supabaseClient.from('student').update({'year-section':null}).eq('id',st['student-id']); } enrolledStudents = enrolledStudents.filter(s=>!selectedStudents.includes(s['student-id'])); await loadUnassignedStudents(); if(selectedSectionId) renderStudents(selectedSectionId); renderUnassignedList(); selectedStudents=[]; updateStats(); closeDropModal(); Swal.fire({title:'Dropped',text:`${toDrop.length} student(s) dropped`,icon:'success',background:'#0b2a3a'}); } catch(e){ Swal.fire({title:'Error',text:e.message,icon:'error',background:'#0b2a3a'}); } }
+    async function dropSingleStudent(id){ try{ await supabaseClient.from('year-section').delete().eq('student-id',id); await supabaseClient.from('student').update({'year-section':null}).eq('id',id); enrolledStudents = enrolledStudents.filter(s=>s['student-id']!==id); await loadUnassignedStudents(); if(selectedSectionId) renderStudents(selectedSectionId); renderUnassignedList(); updateStats(); Swal.fire({title:'Dropped',text:'Student removed',icon:'success',background:'#0b2a3a'}); } catch(e){ Swal.fire({title:'Error',text:e.message,icon:'error',background:'#0b2a3a'}); } }
+
+    // ========== PROMOTION WITH YEAR FILTERING ==========
+    function openPromoteSelectedModal(){ if(selectedStudents.length===0){ Swal.fire({title:'No Students Selected',text:'Select students to promote',icon:'warning',background:'#0b2a3a'}); return; } const currentSection = sections.find(s=>s.sectionCode===selectedSectionId); if(!currentSection){ Swal.fire({title:'Error',text:'Current section not found',icon:'error',background:'#0b2a3a'}); return; } const currentYear = currentSection.year; const yearSelect = document.getElementById('promoteToYear'); yearSelect.innerHTML = ''; for(let y=currentYear+1; y<=4; y++){ const label = y===1?'1st Year':y===2?'2nd Year':y===3?'3rd Year':'4th Year'; yearSelect.appendChild(new Option(label, y)); } yearSelect.appendChild(new Option('Graduated', 'graduated')); if(yearSelect.options.length===0) yearSelect.innerHTML = '<option disabled>No higher years available</option>'; updatePromoteDestinationSections(); document.getElementById('selectedStudentsCount').textContent = `${selectedStudents.length} student(s) selected`; document.getElementById('promoteModal').classList.add('active'); }
+    function updatePromoteDestinationSections(){ const targetYear = document.getElementById('promoteToYear').value; const destSelect = document.getElementById('promoteToSection'); if(!targetYear){ destSelect.innerHTML='<option value="">Select Section</option>'; return; } if(targetYear==='graduated'){ destSelect.innerHTML='<option value="graduated">Graduated (Remove from sections)</option>'; return; } const available = sections.filter(s=>s.year===parseInt(targetYear)); destSelect.innerHTML = '<option value="">Select Section</option>'+available.map(s=>`<option value="${s.sectionCode}">${s.name}</option>`).join(''); if(available.length===0) destSelect.innerHTML = '<option disabled>No sections available for this year</option>'; }
+    async function promoteStudents(){ const toYear = document.getElementById('promoteToYear').value; const toSection = document.getElementById('promoteToSection').value; if(!toYear||!toSection){ Swal.fire({title:'Error',text:'Select target year and section',icon:'error',background:'#0b2a3a'}); return; } const currentSection = sections.find(s=>s.sectionCode===selectedSectionId); if(!currentSection){ Swal.fire({title:'Error',text:'Source section missing',icon:'error',background:'#0b2a3a'}); return; } const targetYearNum = toYear==='graduated'?null:parseInt(toYear); if(targetYearNum && targetYearNum <= currentSection.year){ Swal.fire({title:'Invalid',text:'Cannot promote to same or lower year',icon:'error',background:'#0b2a3a'}); return; } const finalSectionCode = toYear==='graduated'?null:toSection; try{ Swal.fire({title:'Promoting...',allowOutsideClick:false,didOpen:()=>Swal.showLoading(),background:'#0b2a3a'}); for(const sid of selectedStudents){ await supabaseClient.from('year-section').update({'year-section':finalSectionCode}).eq('student-id',sid); await supabaseClient.from('student').update({'year-section':finalSectionCode}).eq('id',sid); const idx = enrolledStudents.findIndex(s=>s['student-id']===sid); if(idx!==-1) enrolledStudents[idx]['year-section']=finalSectionCode; } selectedStudents = []; if(selectedSectionId) renderStudents(selectedSectionId); renderSections(); closePromoteModal(); Swal.fire({title:'Success',text:`Students promoted`,icon:'success',background:'#0b2a3a'}); } catch(e){ Swal.fire({title:'Error',text:e.message,icon:'error',background:'#0b2a3a'}); } }
+    function closePromoteModal(){ document.getElementById('promoteModal').classList.remove('active'); }
+
+    // Whole section promotion with filtering
+    function openPromoteWholeSectionModal(){ updateSourceSectionDropdown(); document.getElementById('sourceSectionInfo').style.display='none'; document.getElementById('promoteWholeSectionModal').classList.add('active'); }
+    function updateSourceSectionDropdown(){ const sel = document.getElementById('sourceSection'); sel.innerHTML = '<option value="">Select Section</option>'+sections.map(s=>`<option value="${s.sectionCode}">${s.name} - ${enrolledStudents.filter(st=>st['year-section']===s.sectionCode).length} students</option>`).join(''); }
+    function updateSourceSectionInfo(){ const src = document.getElementById('sourceSection').value; if(!src){ document.getElementById('sourceSectionInfo').style.display='none'; return; } const sec = sections.find(s=>s.sectionCode===src); const cnt = enrolledStudents.filter(s=>s['year-section']===src).length; document.getElementById('sourceSectionDetails').innerHTML = `<strong>${sec?.name}</strong><br>Current Year: ${sec?.year}<br>Students: ${cnt}`; document.getElementById('sourceSectionInfo').style.display='block'; updateFilteredWholeYearOptions(sec?.year||1); updateDestinationSections(); }
+    function updateFilteredWholeYearOptions(currentYear){ const yearSelect = document.getElementById('promoteWholeToYear'); yearSelect.innerHTML = ''; for(let y=currentYear+1; y<=4; y++){ const label = y===1?'1st Year':y===2?'2nd Year':y===3?'3rd Year':'4th Year'; yearSelect.appendChild(new Option(label, y)); } yearSelect.appendChild(new Option('Graduated', 'graduated')); if(yearSelect.options.length===0) yearSelect.innerHTML = '<option disabled>No higher years available</option>'; }
+    function updateDestinationSections(){ const src = document.getElementById('sourceSection').value; const toYear = document.getElementById('promoteWholeToYear').value; if(!src||!toYear){ document.getElementById('destinationSection').innerHTML='<option value="">Select Section</option>'; document.getElementById('wholeSectionCount').textContent='0 students'; return; } const cnt = enrolledStudents.filter(s=>s['year-section']===src).length; const dest = document.getElementById('destinationSection'); if(toYear==='graduated'){ dest.innerHTML='<option value="graduated">Graduated (Remove from sections)</option>'; document.getElementById('wholeSectionCount').textContent = `${cnt} students`; } else { const available = sections.filter(s=>s.year===parseInt(toYear)); dest.innerHTML = '<option value="">Select Section</option>'+available.map(s=>`<option value="${s.sectionCode}">${s.name}</option>`).join(''); if(available.length===0) dest.innerHTML = '<option disabled>No sections available</option>'; document.getElementById('wholeSectionCount').textContent = `${cnt} students`; } }
+    async function promoteWholeSection(){ const src = document.getElementById('sourceSection').value; const toYear = document.getElementById('promoteWholeToYear').value; const destSec = document.getElementById('destinationSection').value; if(!src||!toYear||!destSec){ Swal.fire({title:'Error',text:'Complete all fields',icon:'error',background:'#0b2a3a'}); return; } const srcSection = sections.find(s=>s.sectionCode===src); if(!srcSection) return; const targetYearNum = toYear==='graduated'?null:parseInt(toYear); if(targetYearNum && targetYearNum <= srcSection.year){ Swal.fire({title:'Invalid',text:'Cannot promote to same or lower year',icon:'error',background:'#0b2a3a'}); return; } const studentsList = enrolledStudents.filter(s=>s['year-section']===src); if(studentsList.length===0){ Swal.fire({title:'No Students',text:'No students in this section',icon:'warning',background:'#0b2a3a'}); return; } const finalSectionCode = toYear==='graduated'?null:destSec; try{ Swal.fire({title:'Promoting Section...',allowOutsideClick:false,didOpen:()=>Swal.showLoading(),background:'#0b2a3a'}); for(const st of studentsList){ await supabaseClient.from('year-section').update({'year-section':finalSectionCode}).eq('student-id',st['student-id']); await supabaseClient.from('student').update({'year-section':finalSectionCode}).eq('id',st['student-id']); } await loadEnrolledStudents(); await loadUnassignedStudents(); document.getElementById('sourceSection').value=''; document.getElementById('destinationSection').innerHTML='<option value="">Select Section</option>'; document.getElementById('wholeSectionCount').textContent='0 students'; closePromoteWholeSectionModal(); if(selectedSectionId) renderStudents(selectedSectionId); renderSections(); renderUnassignedList(); updateStats(); Swal.fire({title:'Success',text:`${studentsList.length} students promoted`,icon:'success',timer:2000,background:'#0b2a3a',showConfirmButton:false}); } catch(e){ Swal.fire({title:'Error',text:e.message,icon:'error',background:'#0b2a3a'}); } }
+    function closePromoteWholeSectionModal(){ document.getElementById('promoteWholeSectionModal').classList.remove('active'); document.getElementById('sourceSection').value=''; document.getElementById('promoteWholeToYear').innerHTML=''; document.getElementById('destinationSection').innerHTML='<option value="">Select Section</option>'; document.getElementById('sourceSectionInfo').style.display='none'; document.getElementById('wholeSectionCount').textContent='0 students'; }
+
+    function confirmLogout(){ Swal.fire({title:'Are you sure?',text:"You will be logged out!",icon:'warning',showCancelButton:true,confirmButtonColor:'#00f2ff',cancelButtonColor:'#ff6b6b',confirmButtonText:'Yes, logout',background:'#0b2a3a'}).then(res=>{ if(res.isConfirmed){ localStorage.clear(); sessionStorage.clear(); Swal.fire({title:'Logged Out!',text:'Successfully logged out',icon:'success',timer:2000,background:'#0b2a3a',showConfirmButton:false}).then(()=>window.location.href='index.html'); } }); }
+    function updateStats(){ document.getElementById('totalStudents').textContent = enrolledStudents.length; document.getElementById('totalSections').textContent = sections.length; }
+    function updateSectionDropdowns(){ const opts = sections.map(s=>`<option value="${s.sectionCode}">${s.name}</option>`).join(''); document.getElementById('studentSection').innerHTML = '<option value="">Select Section</option>'+opts; document.getElementById('batchEnrollSection').innerHTML = '<option value="">Select Section</option>'+opts; }
+    function toggleProfileMenu(){ document.getElementById('profileMenu').classList.toggle('active'); }
+    document.addEventListener('click',function(e){ const profile = document.querySelector('.profile'); const menu = document.getElementById('profileMenu'); const bell = document.querySelector('.notification-bell'); const drop = document.getElementById('notificationDropdown'); if(profile&&menu&&!profile.contains(e.target)&&!menu.contains(e.target)) menu.classList.remove('active'); if(bell&&drop&&!bell.contains(e.target)&&!drop.contains(e.target)) drop.classList.remove('active'); const fnameSug = document.getElementById('fnameSuggestions'); const lnameSug = document.getElementById('lnameSuggestions'); if(fnameSug&&!document.getElementById('studentFname').contains(e.target)&&!fnameSug.contains(e.target)) fnameSug.classList.remove('active'); if(lnameSug&&!document.getElementById('studentLname').contains(e.target)&&!lnameSug.contains(e.target)) lnameSug.classList.remove('active'); });
+    window.toggleMenu = window.toggleMenu||function(){}; window.toggleNotifications = toggleNotifications; window.refreshUnassignedList = refreshUnassignedList; window.toggleUnassignedSelection = toggleUnassignedSelection; window.toggleSelectAllUnassigned = toggleSelectAllUnassigned; window.openBatchEnrollModal = openBatchEnrollModal; window.closeBatchEnrollModal = closeBatchEnrollModal; window.processBatchEnrollment = processBatchEnrollment; window.openAddSectionModal = openAddSectionModal; window.closeSectionModal = closeSectionModal; window.saveSection = saveSection; window.selectSection = selectSection; window.openDeleteSectionModal = openDeleteSectionModal; window.openAddStudentModal = openAddStudentModal; window.closeStudentModal = closeStudentModal; window.saveStudent = saveStudent; window.openDropStudentModal = openDropStudentModal; window.openDropSelectedModal = openDropSelectedModal; window.closeDropModal = closeDropModal; window.dropStudents = dropStudents; window.toggleStudentSelection = toggleStudentSelection; window.toggleSelectAllStudents = toggleSelectAllStudents; window.selectAllStudents = selectAllStudents; window.openPromoteSelectedModal = openPromoteSelectedModal; window.closePromoteModal = closePromoteModal; window.promoteStudents = promoteStudents; window.updatePromoteDestinationSections = updatePromoteDestinationSections; window.openPromoteWholeSectionModal = openPromoteWholeSectionModal; window.updateSourceSectionInfo = updateSourceSectionInfo; window.updateDestinationSections = updateDestinationSections; window.promoteWholeSection = promoteWholeSection; window.closePromoteWholeSectionModal = closePromoteWholeSectionModal; window.toggleProfileMenu = toggleProfileMenu; window.confirmLogout = confirmLogout; window.searchUnassignedStudents = searchUnassignedStudents; window.selectUnassignedStudent = selectUnassignedStudent;
+</script>
+</body>
+</html>

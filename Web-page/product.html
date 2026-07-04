@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendify · Smart School Attendance</title>
+<link rel="icon" type="image/png" href="images/websitelogo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04050a;--surface:#0b0d14;--surface2:#11131c;--surface3:#171a25;
+  --border:rgba(255,255,255,.065);--border-hi:rgba(255,255,255,.13);--border-glow:rgba(77,124,255,.3);
+  --text:#eeeef3;--muted:rgba(238,238,243,.42);--mid:rgba(238,238,243,.68);
+  --blue:#4d7cff;--purple:#a06cf8;--green:#30d158;--orange:#ff9f0a;--red:#ff453a;
+  --glow:rgba(77,124,255,.22);
+  --nav-h:64px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.5}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(77,124,255,.4);border-radius:4px}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:300;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2.8rem;height:var(--nav-h);
+  background:rgba(4,5,10,.85);
+  backdrop-filter:blur(24px) saturate(180%);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;
+  display:flex;align-items:center;gap:9px;letter-spacing:-.02em;
+  text-decoration:none;color:var(--text);flex-shrink:0;
+}
+.logo-icon{
+  width:32px;height:32px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px var(--glow);flex-shrink:0;overflow:hidden;
+}
+.logo-icon img{width:100%;height:100%;object-fit:contain;padding:3px;display:block}
+
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-links a{text-decoration:none;color:var(--muted);font-size:.85rem;transition:color .2s;white-space:nowrap}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{
+  background:linear-gradient(135deg,var(--blue),var(--purple)) !important;
+  color:#fff !important;padding:.48rem 1.4rem !important;border-radius:50px;
+  font-weight:500 !important;font-size:.83rem !important;
+  box-shadow:0 4px 18px var(--glow);
+  transition:transform .2s,box-shadow .2s !important;white-space:nowrap;
+}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--glow) !important}
+
+/* Mobile nav toggle */
+.nav-toggle{
+  display:none;
+  flex-direction:column;justify-content:center;align-items:center;
+  width:40px;height:40px;gap:5px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;flex-shrink:0;
+}
+.nav-toggle span{
+  display:block;width:18px;height:1.5px;background:var(--muted);
+  border-radius:2px;transition:all .3s;
+}
+.nav-toggle.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.nav-toggle.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.nav-toggle.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+/* Mobile drawer */
+.mobile-menu{
+  display:none;position:fixed;top:var(--nav-h);left:0;right:0;
+  background:rgba(4,5,10,.97);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);z-index:299;
+  flex-direction:column;padding:1.4rem;gap:.3rem;
+  transform:translateY(-8px);opacity:0;
+  transition:transform .3s cubic-bezier(.2,1,.3,1),opacity .3s;
+}
+.mobile-menu.open{transform:translateY(0);opacity:1}
+.mobile-menu a{
+  text-decoration:none;color:var(--muted);font-size:1rem;
+  padding:.85rem 1rem;border-radius:10px;
+  border:1px solid transparent;transition:all .2s;
+}
+.mobile-menu a:hover{color:var(--text);background:rgba(255,255,255,.04);border-color:var(--border)}
+.mobile-menu .mob-cta{
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff !important;text-align:center;font-weight:500;
+  border-radius:50px;margin-top:.4rem;
+  box-shadow:0 4px 18px var(--glow);
+}
+
+/* ── HERO ── */
+#hero{
+  position:relative;min-height:100dvh;
+  display:flex;align-items:center;overflow:hidden;
+  padding-top:var(--nav-h);
+}
+.hero-mesh{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 70% at 68% 40%,rgba(77,124,255,.1) 0%,transparent 65%),
+             radial-gradient(ellipse 45% 55% at 20% 65%,rgba(160,108,248,.07) 0%,transparent 65%);
+}
+.hero-mesh::before{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,.055) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+.hero-inner{
+  position:relative;z-index:10;width:100%;max-width:1300px;margin:0 auto;
+  padding:3rem 2.8rem 4rem;
+  display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;
+}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(77,124,255,.1);border:1px solid rgba(77,124,255,.28);
+  border-radius:50px;padding:.38rem 1rem;
+  font-size:.68rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;
+  color:#7aa3ff;margin-bottom:1.8rem;
+}
+.eyebrow-dot{width:6px;height:6px;background:var(--blue);border-radius:50%;animation:blink-d 2s ease infinite;flex-shrink:0}
+@keyframes blink-d{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.2;transform:scale(.7)}}
+
+.hero-h1{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(2.4rem,5.5vw,5rem);
+  line-height:.93;letter-spacing:-.045em;margin-bottom:1.5rem;
+}
+.hero-h1 .line-plain{display:block;color:var(--text)}
+.hero-h1 .line-grad{
+  display:block;
+  background:linear-gradient(115deg,var(--blue) 0%,var(--purple) 55%,#e040fb 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-desc{
+  font-size:1rem;color:var(--muted);line-height:1.72;
+  max-width:430px;margin-bottom:2.3rem;font-weight:300;
+}
+.hero-btns{display:flex;gap:.9rem;flex-wrap:wrap}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:.6rem;
+  background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;
+  text-decoration:none;padding:.88rem 2rem;border-radius:50px;
+  font-weight:500;font-size:.92rem;
+  box-shadow:0 8px 28px var(--glow);transition:transform .25s,box-shadow .25s;
+}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 16px 40px var(--glow)}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:.6rem;
+  background:rgba(255,255,255,.05);border:1px solid var(--border-hi);color:var(--mid);
+  text-decoration:none;padding:.88rem 1.8rem;border-radius:50px;
+  font-size:.92rem;transition:all .25s;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.09);color:var(--text)}
+
+.hero-stats{
+  display:flex;gap:0;margin-top:2.8rem;
+  padding-top:2.2rem;border-top:1px solid var(--border);
+}
+.hstat{flex:1;padding-right:2rem}
+.hstat:not(:last-child){border-right:1px solid var(--border);margin-right:2rem}
+.hstat .n{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.75rem;
+  letter-spacing:-.04em;line-height:1;
+  background:linear-gradient(135deg,var(--text),var(--mid));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hstat .l{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+
+/* ── KIOSK ── */
+.kiosk-scene{
+  display:flex;justify-content:center;align-items:flex-end;
+  position:relative;padding-bottom:36px;min-height:580px;
+}
+.kiosk-floor-glow{
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:340px;height:50px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(77,124,255,.28) 0%,transparent 70%);
+  filter:blur(14px);border-radius:50%;
+}
+.kiosk-wrap{
+  position:relative;z-index:2;
+  animation:kiosk-float 6s ease-in-out infinite;
+  filter:drop-shadow(0 50px 70px rgba(0,0,0,.75));
+}
+@keyframes kiosk-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.kiosk{display:flex;flex-direction:column;align-items:center;width:220px}
+
+.kiosk-upper{
+  width:100%;
+  background:linear-gradient(175deg,#181c28 0%,#0e111a 60%,#090b14 100%);
+  border-radius:14px 14px 4px 4px;
+  border:1px solid rgba(255,255,255,.1);border-bottom:none;
+  box-shadow:inset 1px 0 0 rgba(255,255,255,.05),inset -1px 0 0 rgba(255,255,255,.03),inset 0 1px 0 rgba(255,255,255,.07);
+  padding:0 0 6px 0;position:relative;overflow:hidden;
+}
+.kiosk-upper::before{
+  content:'';position:absolute;left:0;top:8%;bottom:8%;width:3px;
+  background:linear-gradient(180deg,transparent,rgba(77,124,255,.7),rgba(160,108,248,.5),transparent);
+  border-radius:0 2px 2px 0;
+}
+.ku-top{
+  background:linear-gradient(90deg,#0d1020,#131728,#0d1020);
+  padding:7px 12px 6px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.ku-logo-wrap{display:flex;align-items:center;gap:6px}
+.ku-logo-icon{
+  width:18px;height:18px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  border-radius:5px;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0;
+}
+.ku-logo-icon img{width:100%;height:100%;object-fit:contain;padding:2px;display:block}
+.ku-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.ku-leds{display:flex;gap:5px}
+.ku-led{width:5px;height:5px;border-radius:50%}
+.led-g{background:var(--green);box-shadow:0 0 5px var(--green);animation:led-blink 3s ease infinite}
+.led-r{background:var(--red);box-shadow:0 0 5px var(--red);animation:led-blink 3s ease infinite 1.2s;opacity:.5}
+@keyframes led-blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+.ku-cam-row{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:7px 14px 5px;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.cam-body{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  background:rgba(0,0,0,.4);border-radius:20px;padding:5px 14px;
+  border:1px solid rgba(255,255,255,.06);
+}
+.cam-lens-outer{
+  width:20px;height:20px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#22263a,#04050e);
+  border:2px solid rgba(77,124,255,.5);
+  box-shadow:0 0 10px rgba(77,124,255,.4),inset 0 0 5px rgba(0,0,0,.9);
+  animation:cam-glow 3s ease infinite;
+}
+@keyframes cam-glow{
+  0%,100%{box-shadow:0 0 10px rgba(77,124,255,.35),inset 0 0 5px rgba(0,0,0,.9)}
+  50%{box-shadow:0 0 20px rgba(77,124,255,.7),inset 0 0 5px rgba(0,0,0,.9)}
+}
+.cam-ir{width:6px;height:6px;border-radius:50%;background:#1a0505;border:1px solid #5a1010}
+.cam-label{font-size:.38rem;letter-spacing:.1em;color:rgba(255,255,255,.2);text-transform:uppercase}
+
+.ku-screen-housing{
+  margin:8px 10px 4px;background:#05060d;border-radius:10px;
+  border:1px solid rgba(255,255,255,.09);overflow:hidden;
+  box-shadow:0 0 0 1px rgba(77,124,255,.07),inset 0 2px 8px rgba(0,0,0,.7);position:relative;
+}
+.ku-screen-housing::after{
+  content:'';position:absolute;left:0;right:0;height:1.5px;top:0;
+  background:linear-gradient(90deg,transparent,rgba(77,124,255,.8),transparent);
+  animation:scan-line 3.5s ease-in-out infinite;opacity:.7;
+}
+@keyframes scan-line{0%{top:0;opacity:.7}100%{top:100%;opacity:0}}
+.scr-bezel{background:#08090f;padding:5px}
+.scr-body{background:linear-gradient(165deg,#05070e,#080b16);border-radius:6px;padding:9px;position:relative;overflow:hidden}
+.scr-aspect{aspect-ratio:10/8}
+.scr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.scr-t-left{display:flex;flex-direction:column;gap:1px}
+.scr-time{font-size:.5rem;color:var(--blue);font-weight:600;letter-spacing:.04em}
+.scr-class{font-size:.42rem;color:var(--muted);letter-spacing:.02em}
+.scr-live-badge{
+  display:flex;align-items:center;gap:3px;font-size:.38rem;color:var(--green);
+  font-weight:700;letter-spacing:.07em;background:rgba(48,209,88,.1);
+  border:1px solid rgba(48,209,88,.25);border-radius:10px;padding:.15rem .4rem;
+}
+.live-dot{width:4px;height:4px;border-radius:50%;background:var(--green);animation:led-blink 1.4s ease infinite}
+.scr-facebox{
+  margin:3px auto 4px;width:58%;border:1.5px solid rgba(77,124,255,.55);
+  border-radius:7px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  position:relative;background:rgba(77,124,255,.025);
+}
+.scr-facebox::before,.scr-facebox::after{content:'';position:absolute;width:8px;height:8px;border-color:rgba(77,124,255,.9);border-style:solid}
+.scr-facebox::before{top:-1px;left:-1px;border-width:2px 0 0 2px;border-radius:2px 0 0 0}
+.scr-facebox::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;border-radius:0 0 2px 0}
+.scr-face-svg{opacity:.4}
+.scr-status{text-align:center;font-size:.38rem;color:var(--green);letter-spacing:.1em;margin-bottom:4px;animation:recog-blink 2s ease infinite}
+@keyframes recog-blink{0%,100%{opacity:.55}50%{opacity:1}}
+.scr-prog-track{height:1.5px;background:rgba(255,255,255,.06);border-radius:2px;margin:0 2px 5px}
+.scr-prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--purple));animation:prog 3s ease-in-out infinite}
+@keyframes prog{0%{width:0}60%{width:100%}100%{width:100%}}
+.scr-rows{display:flex;flex-direction:column;gap:2px}
+.scr-row{display:flex;align-items:center;gap:3px;padding:2px 3px;background:rgba(255,255,255,.025);border-radius:3px}
+.s-av{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.s-lines{flex:1}.s-line{height:1.5px;background:rgba(255,255,255,.09);border-radius:1px;margin-bottom:1.5px}.s-line.s7{width:70%}
+.s-badge{font-size:.33rem;padding:1px 3px;border-radius:2px;font-weight:700;letter-spacing:.04em;flex-shrink:0}
+.bp{background:rgba(48,209,88,.15);color:var(--green)}
+.bl{background:rgba(255,159,10,.15);color:var(--orange)}
+.ba{background:rgba(255,69,58,.15);color:var(--red)}
+
+.ku-buttons{display:flex;flex-direction:column;gap:4px;padding:0 8px 6px}
+.ku-btn-row{display:flex;gap:5px;justify-content:flex-end}
+.ku-btn{width:14px;height:7px;border-radius:2px;background:linear-gradient(135deg,#252838,#1a1d2a);border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+
+.ku-slot-area{margin:0 10px 6px;background:#070910;border-radius:6px;border:1px solid rgba(255,255,255,.06);padding:6px 8px}
+.ku-slot-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.ku-slot-label{font-size:.38rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;opacity:.5}
+.ku-slot-pi{font-size:.36rem;color:rgba(77,124,255,.45);font-weight:600;letter-spacing:.06em}
+.ku-reader{display:flex;align-items:center;gap:7px}
+.reader-circle{
+  width:24px;height:24px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,#1c1f2e,#06080f);
+  border:2px solid rgba(48,209,88,.4);
+  box-shadow:0 0 8px rgba(48,209,88,.25),inset 0 0 4px rgba(0,0,0,.8);
+  display:flex;align-items:center;justify-content:center;
+  animation:reader-pulse 4s ease infinite;
+}
+@keyframes reader-pulse{
+  0%,100%{box-shadow:0 0 8px rgba(48,209,88,.25),inset 0 0 4px rgba(0,0,0,.8)}
+  50%{box-shadow:0 0 16px rgba(48,209,88,.5),inset 0 0 4px rgba(0,0,0,.8)}
+}
+.reader-inner{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#30d158,#1a7a30);opacity:.6}
+.reader-info{display:flex;flex-direction:column;gap:2px}
+.reader-tag{font-size:.38rem;color:var(--muted);letter-spacing:.06em}
+.reader-sub{font-size:.33rem;color:rgba(255,255,255,.18);letter-spacing:.05em}
+
+.ku-printer{margin:0 10px 8px;background:#06070f;border-radius:6px;border:1px solid rgba(255,255,255,.05);padding:5px 8px}
+.printer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.printer-name{font-size:.37rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);opacity:.5}
+.printer-rdy{font-size:.35rem;color:var(--green);letter-spacing:.06em}
+.printer-slot{height:3px;background:#02030a;border-radius:2px;margin-bottom:3px;overflow:hidden;position:relative}
+.printer-slot::after{
+  content:'';position:absolute;top:0;left:-60%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  animation:print-shim 3s ease infinite 2s;
+}
+@keyframes print-shim{0%{left:-60%}100%{left:110%}}
+.paper-out{
+  width:72%;height:20px;background:linear-gradient(180deg,#eaebec,#d5d6d8);
+  margin:0 auto;border-radius:0 0 3px 3px;position:relative;top:-1px;
+  box-shadow:0 4px 10px rgba(0,0,0,.5);
+}
+.paper-out::before{content:'';position:absolute;inset:3px 6px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.08) 0,rgba(0,0,0,.08) 1px,transparent 1px,transparent 3.5px)}
+.paper-out::after{content:'ATTENDIFY';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);font-size:.26rem;color:rgba(0,0,0,.22);letter-spacing:.1em;font-weight:700}
+
+.kiosk-lower{
+  width:100%;background:linear-gradient(180deg,#16192a 0%,#111422 50%,#0d0f1c 100%);
+  border-radius:0 0 8px 8px;border:1px solid rgba(255,255,255,.07);border-top:none;
+  min-height:120px;position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;padding-bottom:10px;
+  box-shadow:inset 0 -1px 0 rgba(255,255,255,.04);
+}
+.kiosk-lower::before{content:'';position:absolute;top:18px;left:20px;right:20px;height:1px;background:rgba(255,255,255,.04)}
+.kiosk-lower::after{content:'';position:absolute;top:22px;left:20px;right:20px;height:1px;background:rgba(0,0,0,.3)}
+.cabinet-lock{width:18px;height:24px;border-radius:9px 9px 3px 3px;background:#0a0c18;border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;margin-bottom:14px}
+.lock-cylinder{width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(255,255,255,.1)}
+.lock-slot{width:3px;height:6px;background:rgba(255,255,255,.07);border-radius:1px}
+.cabinet-ports{display:flex;gap:4px;align-items:center;margin-bottom:6px}
+.c-port{width:9px;height:6px;background:#08090f;border:1px solid rgba(255,255,255,.07);border-radius:1px}
+.c-port.wide{width:12px}
+.kiosk-ped{display:flex;flex-direction:column;align-items:center}
+.ped-base{width:220px;height:10px;background:linear-gradient(180deg,#1c1f2e,#0f1018);border-radius:0 0 8px 8px;border:1px solid rgba(255,255,255,.06);border-top:none;box-shadow:0 6px 20px rgba(0,0,0,.6)}
+.ped-shadow{width:240px;height:14px;background:radial-gradient(ellipse at 50% 0%,rgba(77,124,255,.2) 0%,transparent 70%);filter:blur(8px);border-radius:50%;margin-top:2px}
+
+/* ── MARQUEE ── */
+.marquee-strip{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:.9rem 0;overflow:hidden;white-space:nowrap}
+.marquee-inner{display:inline-flex;gap:2.8rem;animation:m-scroll 26s linear infinite}
+@keyframes m-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.mi{display:inline-flex;align-items:center;gap:7px;font-size:.73rem;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.mi-dot{width:4px;height:4px;border-radius:50%;background:var(--blue);opacity:.6;flex-shrink:0}
+.m-sep{color:rgba(255,255,255,.1)}
+
+/* ── SHARED SECTION ── */
+section{position:relative;z-index:10}
+.container{max-width:1300px;margin:0 auto;padding:0 2.8rem}
+.sec-label{display:inline-flex;align-items:center;gap:10px;font-size:.66rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:1.1rem}
+.sec-label::before{content:'';display:block;width:20px;height:1px;background:var(--blue);flex-shrink:0}
+.sec-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.7rem,3.8vw,3rem);letter-spacing:-.04em;line-height:1.05;margin-bottom:1.1rem}
+.sec-h2 em{font-style:normal;background:linear-gradient(115deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sec-body{font-size:.96rem;color:var(--muted);line-height:1.72;font-weight:300;max-width:540px}
+
+/* ── SCROLL ANIMATIONS ── */
+.pop{opacity:0;transform:translateY(36px) scale(.98);transition:opacity .75s cubic-bezier(.2,1,.3,1),transform .75s cubic-bezier(.2,1,.3,1)}
+.pop.visible{opacity:1;transform:translateY(0) scale(1)}
+.pop-left{opacity:0;transform:translateX(-32px);transition:opacity .8s cubic-bezier(.2,1,.3,1),transform .8s cubic-bezier(.2,1,.3,1)}
+.pop-left.visible{opacity:1;transform:translateX(0)}
+.pop-right{opacity:0;transform:translateX(32px);transition:opacity .8s cubic-bezier(.2,1,.3,1),transform .8s cubic-bezier(.2,1,.3,1)}
+.pop-right.visible{opacity:1;transform:translateX(0)}
+.d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
+
+/* ── FEATURES ── */
+#features{padding:7rem 0 5rem}
+.features-header{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:end;margin-bottom:4.5rem}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.bc{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:2.2rem;position:relative;overflow:hidden;
+  transition:border-color .3s,transform .4s cubic-bezier(.2,1,.3,1),box-shadow .3s;
+}
+.bc::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(77,124,255,.07),transparent 55%);opacity:0;transition:opacity .4s;pointer-events:none}
+.bc:hover{border-color:var(--border-glow);transform:translateY(-5px);box-shadow:0 20px 50px rgba(0,0,0,.25),0 0 0 1px rgba(77,124,255,.1)}
+.bc:hover::before{opacity:1}
+.c5{grid-column:span 5}.c4{grid-column:span 4}.c3{grid-column:span 3}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}
+.card-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;flex-shrink:0}
+.ic-bl{background:rgba(77,124,255,.12);color:var(--blue)}
+.ic-pu{background:rgba(160,108,248,.12);color:var(--purple)}
+.ic-gr{background:rgba(48,209,88,.12);color:var(--green)}
+.ic-or{background:rgba(255,159,10,.12);color:var(--orange)}
+.ic-re{background:rgba(255,69,58,.12);color:var(--red)}
+.ic-cy{background:rgba(100,220,255,.1);color:#64dcff}
+.card-chip{position:absolute;top:1.3rem;right:1.3rem;font-size:.58rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.24rem .7rem;border-radius:50px;border:1px solid var(--border);color:var(--muted);background:rgba(255,255,255,.02)}
+.card-h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;letter-spacing:-.02em;margin-bottom:.6rem}
+.card-p{font-size:.85rem;color:var(--muted);line-height:1.6;font-weight:300}
+.mini-vis{margin-top:1.4rem;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+
+.vis-dots{background:rgba(77,124,255,.03);padding:.9rem;display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.vd{width:8px;height:8px;border-radius:50%;background:var(--blue);opacity:.25;animation:vblink 2.2s ease infinite}
+.vd:nth-child(2n){background:var(--purple);animation-delay:.45s}
+.vd:nth-child(3n){background:var(--green);animation-delay:.9s}
+@keyframes vblink{0%,100%{opacity:.12}50%{opacity:.95}}
+.vis-sched{padding:.9rem;background:rgba(255,159,10,.025)}
+.sched-row{display:flex;align-items:center;gap:8px;padding:.32rem 0;border-bottom:1px solid var(--border)}
+.sched-row:last-child{border:none}
+.sched-time{font-size:.58rem;color:var(--orange);font-weight:600;width:34px;flex-shrink:0}
+.sched-bar{flex:1;height:7px;border-radius:4px;background:rgba(255,159,10,.1);overflow:hidden}
+.sched-fill{height:100%;border-radius:4px}
+.sched-name{font-size:.55rem;color:var(--muted);width:50px;flex-shrink:0;text-align:right}
+.vis-bars{display:flex;align-items:flex-end;gap:5px;padding:.9rem;background:rgba(48,209,88,.025);height:80px}
+.vbar{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(to top,var(--blue),var(--purple));opacity:.55;animation:barrise 1.1s ease-out both}
+@keyframes barrise{from{transform:scaleY(0);transform-origin:bottom}to{transform:scaleY(1);transform-origin:bottom}}
+.vis-touch{padding:.9rem;background:rgba(160,108,248,.025);display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.t-btn{border-radius:7px;padding:.45rem;font-size:.52rem;color:var(--muted);border:1px solid var(--border);text-align:center;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(255,255,255,.02);transition:background .2s,border-color .2s}
+.t-btn.active{background:rgba(77,124,255,.1);border-color:rgba(77,124,255,.3);color:var(--blue)}
+.vis-web{padding:.9rem;background:rgba(48,209,88,.025)}
+.web-chrome{height:22px;background:rgba(255,255,255,.04);border-radius:5px;display:flex;align-items:center;padding:0 7px;gap:5px;margin-bottom:7px;border:1px solid var(--border)}
+.wd-dot{width:5px;height:5px;border-radius:50%}
+.web-url-bar{flex:1;height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-left:5px}
+.web-content{display:flex;flex-direction:column;gap:3px}
+.web-line{height:5px;background:rgba(255,255,255,.06);border-radius:3px}
+.vis-print{display:flex;flex-direction:column;align-items:center;padding:.9rem;background:rgba(255,69,58,.025);gap:5px}
+.p-sheet{width:76%;background:linear-gradient(180deg,#e5e6e7,#d2d3d4);border-radius:3px;padding:5px 7px}
+.p-line{height:2px;background:rgba(0,0,0,.1);border-radius:1px;margin:2px 0}
+.p-line.ps{width:55%}
+.p-logo-bar{width:30%;height:4px;background:linear-gradient(90deg,rgba(0,0,0,.2),rgba(0,0,0,.08));border-radius:2px;margin-bottom:3px}
+.vis-portal{padding:.9rem;background:rgba(100,220,255,.025)}
+.portal-steps{display:flex;flex-direction:column;gap:5px}
+.portal-step{display:flex;align-items:center;gap:7px;padding:.3rem .4rem;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border)}
+.portal-step-num{width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.38rem;font-weight:700;color:white;flex-shrink:0}
+.portal-step-text{font-size:.5rem;color:var(--mid);letter-spacing:.02em}
+
+/* ── SPECS ── */
+#specs{padding:7rem 0;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.specs-layout{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center}
+.specs-table{margin-top:2.8rem}
+.spec-row{display:flex;align-items:center;justify-content:space-between;padding:1rem 0;border-bottom:1px solid var(--border);transition:background .2s,padding .2s}
+.spec-row:first-child{border-top:1px solid var(--border)}
+.spec-row:hover{background:rgba(255,255,255,.015);padding-left:8px;padding-right:8px;border-radius:6px;margin:0 -8px}
+.spec-k{display:flex;align-items:center;gap:10px;font-size:.83rem;color:var(--muted)}
+.spec-k-dot{width:4px;height:4px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.spec-v{font-family:'Syne',sans-serif;font-weight:700;font-size:.83rem;color:var(--text);text-align:right}
+.pi-board{background:linear-gradient(140deg,#191c28,#0e1018);border:1px solid var(--border-hi);border-radius:18px;width:100%;aspect-ratio:4/3;position:relative;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.pi-board::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 28% 28%,rgba(77,124,255,.08),transparent 55%)}
+.pi-chip{position:absolute;width:28%;height:28%;top:30%;left:32%;background:linear-gradient(135deg,#24273a,#181b28);border:1px solid rgba(77,124,255,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.43rem;color:rgba(77,124,255,.55);letter-spacing:.06em;font-weight:700;box-shadow:0 0 16px rgba(77,124,255,.12)}
+.pi-ram{position:absolute;width:9%;height:19%;top:25%;left:68%;background:linear-gradient(180deg,#0a84ff,#0a5cbf);border-radius:2px;box-shadow:0 0 6px rgba(10,132,255,.3)}
+.pi-eth{position:absolute;width:10%;height:13%;top:36%;right:4%;background:#0f1118;border:1px solid rgba(255,255,255,.08);border-radius:2px}
+.pi-usbs{position:absolute;bottom:20%;left:4%;display:flex;gap:3%}
+.pi-usb-port{width:22px;height:14px;background:#0a0c14;border:1px solid rgba(255,255,255,.08);border-radius:2px}
+.pi-gpio{position:absolute;top:9%;left:28%;width:42%;display:flex;gap:2px}
+.g-pin{flex:1;height:9px;background:#c9a84c;border-radius:1px;opacity:.65}
+.g-pin:nth-child(even){opacity:.3}
+.pi-l1{position:absolute;top:10px;left:10px;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:led-blink 3s infinite}
+.pi-l2{position:absolute;top:10px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 7px var(--red);animation:led-blink 3s infinite 1.2s}
+.pi-label{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:.46rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.14)}
+
+/* ── HOW IT WORKS ── */
+#how{padding:7rem 0}
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:4.5rem;border:1px solid var(--border);border-radius:22px;overflow:hidden}
+.step-card{background:var(--surface);padding:2.8rem 2.2rem;position:relative;transition:background .3s}
+.step-card:not(:last-child){border-right:1px solid var(--border)}
+.step-card:hover{background:var(--surface2)}
+.step-card:not(:last-child)::after{content:'›';position:absolute;right:-12px;top:50%;transform:translateY(-50%);font-size:1rem;color:var(--blue);z-index:2;background:var(--surface2);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);line-height:24px;text-align:center}
+.step-icon-wrap{display:inline-flex;width:38px;height:38px;border-radius:11px;align-items:center;justify-content:center;margin-bottom:1.2rem}
+.step-num{font-family:'Syne',sans-serif;font-weight:800;font-size:4.5rem;line-height:1;letter-spacing:-.05em;color:rgba(255,255,255,.06);margin-bottom:1.4rem}
+.step-h{font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;letter-spacing:-.02em;margin-bottom:.75rem}
+.step-p{font-size:.85rem;color:var(--muted);line-height:1.68;font-weight:300}
+
+/* ── PROOF ── */
+#proof{padding:7rem 0;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:4rem}
+.proof-card{background:var(--bg);border:1px solid var(--border);border-radius:18px;padding:2rem;transition:border-color .3s,transform .3s}
+.proof-card:hover{border-color:var(--border-hi);transform:translateY(-3px)}
+.proof-stars{color:var(--orange);font-size:.8rem;letter-spacing:.1em;margin-bottom:1rem}
+.proof-quote{font-size:.9rem;color:var(--mid);line-height:1.68;font-weight:300;margin-bottom:1.5rem}
+.proof-author{display:flex;align-items:center;gap:11px}
+.proof-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;flex-shrink:0}
+.proof-name{font-size:.84rem;font-weight:500}
+.proof-role{font-size:.72rem;color:var(--muted)}
+
+/* ── CTA ── */
+#cta{padding:9rem 0;text-align:center;overflow:hidden;position:relative}
+.cta-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 50% 50%,rgba(77,124,255,.07) 0%,transparent 65%)}
+.cta-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.28);border-radius:50px;padding:.38rem 1rem;font-size:.68rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--green);margin-bottom:1.4rem}
+.cta-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.8rem,5vw,4rem);letter-spacing:-.045em;line-height:1;margin:0 auto 1.2rem;max-width:700px}
+.cta-h2 em{font-style:normal;background:linear-gradient(115deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.cta-sub{font-size:.96rem;color:var(--muted);margin-bottom:2.8rem;font-weight:300;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.65}
+.price-card{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:2.5rem 4rem;margin-bottom:2.8rem;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.price-tag{font-family:'Syne',sans-serif;font-weight:800;font-size:3.5rem;letter-spacing:-.05em;line-height:1;margin-bottom:.3rem;background:linear-gradient(135deg,var(--text),var(--mid));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.price-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.5rem}
+.price-includes{display:flex;flex-direction:column;gap:.45rem;text-align:left}
+.price-item{display:flex;align-items:center;gap:.6rem;font-size:.83rem;color:var(--mid)}
+.price-check{color:var(--green);font-size:.75rem;flex-shrink:0}
+.cta-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem}
+.cta-note{font-size:.74rem;color:var(--muted);letter-spacing:.04em}
+.cta-note span{color:rgba(255,255,255,.2);margin:0 .5rem}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:2.8rem 0;background:var(--surface)}
+.foot-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.2rem}
+.foot-links{display:flex;gap:2rem;flex-wrap:wrap}
+.foot-links a{text-decoration:none;font-size:.8rem;color:var(--muted);transition:color .2s}
+.foot-links a:hover{color:var(--mid)}
+.foot-copy{font-size:.76rem;color:var(--muted)}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — TABLET (≤ 1080px)
+═══════════════════════════════════════════════ */
+@media(max-width:1080px){
+
+  /* Nav */
+  nav{padding:0 1.8rem}
+  .nav-links .hidden-tablet{display:none}
+
+  /* Hero */
+  .hero-inner{
+    grid-template-columns:1fr;
+    gap:3rem;padding:2.5rem 1.8rem 4rem;
+    text-align:center;
+  }
+  .hero-copy{display:flex;flex-direction:column;align-items:center}
+  .hero-desc{max-width:560px}
+  .hero-btns{justify-content:center}
+  .hero-stats{justify-content:center}
+
+  /* Kiosk shrink on tablet */
+  .kiosk-scene{min-height:460px;padding-bottom:24px}
+  .kiosk{width:195px}
+  .ped-base{width:195px}
+
+  /* Features */
+  .features-header{grid-template-columns:1fr;gap:1.5rem;margin-bottom:3rem}
+  .c5,.c7,.c4,.c3,.c6,.c8{grid-column:span 6}
+
+  /* Specs */
+  .specs-layout{grid-template-columns:1fr;gap:3rem}
+  .pi-board{max-width:480px}
+
+  /* Steps */
+  .steps-grid{grid-template-columns:1fr 1fr}
+  .step-card:nth-child(2){border-right:none}
+  .step-card:nth-child(2)::after{display:none}
+  .step-card:nth-child(1),.step-card:nth-child(2){border-bottom:1px solid var(--border)}
+
+  /* Proof */
+  .proof-grid{grid-template-columns:1fr 1fr}
+
+  /* Price card */
+  .price-card{padding:2rem 2.5rem}
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤ 768px)
+═══════════════════════════════════════════════ */
+@media(max-width:768px){
+
+  /* Nav: hide desktop links, show toggle */
+  .nav-links{display:none}
+  .nav-toggle{display:flex}
+  nav{padding:0 1.2rem}
+  .mobile-menu{display:flex}
+
+  /* Container padding */
+  .container{padding:0 1.2rem}
+
+  /* Hero */
+  .hero-inner{padding:2rem 1.2rem 3.5rem}
+  .hero-h1{font-size:clamp(2.2rem,9vw,3.5rem)}
+  .hero-desc{font-size:.93rem}
+  .btn-primary,.btn-ghost{padding:.78rem 1.5rem;font-size:.87rem}
+
+  /* Hero stats: 2×2 grid */
+  .hero-stats{
+    display:grid;grid-template-columns:1fr 1fr;gap:0;
+    flex-wrap:unset;
+  }
+  .hstat{
+    padding:1.2rem;border-right:none !important;margin-right:0 !important;
+    border-bottom:1px solid var(--border);
+  }
+  .hstat:nth-child(1),.hstat:nth-child(2){border-right:1px solid var(--border) !important}
+  .hstat:nth-child(3),.hstat:nth-child(4){border-bottom:none}
+  .hstat .n{font-size:1.4rem}
+
+  /* Kiosk */
+  .kiosk-scene{min-height:360px;padding-bottom:16px}
+  .kiosk{width:168px}
+  .kiosk-lower{min-height:90px}
+  .ped-base{width:168px}
+  .ped-shadow{width:188px}
+
+  /* Features */
+  #features{padding:5rem 0 3.5rem}
+  .features-header{margin-bottom:2.2rem}
+  .bento{gap:10px}
+  .c5,.c7,.c4,.c3,.c6,.c8{grid-column:span 12}
+  .bc{padding:1.6rem}
+  .card-icon{width:40px;height:40px;margin-bottom:1.1rem}
+
+  /* Specs */
+  #specs{padding:5rem 0}
+  .spec-row{flex-direction:column;align-items:flex-start;gap:.35rem;padding:.85rem 0}
+  .spec-v{text-align:left;font-size:.78rem}
+  .spec-k{font-size:.78rem}
+  .pi-board{max-width:100%}
+
+  /* How */
+  #how{padding:5rem 0}
+  .steps-grid{
+    grid-template-columns:1fr;border-radius:16px;
+  }
+  .step-card{border-right:none !important;padding:2rem 1.6rem}
+  .step-card:not(:last-child){border-bottom:1px solid var(--border);border-right:none}
+  .step-card:not(:last-child)::after{
+    display:flex;right:unset;left:50%;transform:translateX(-50%);
+    bottom:-13px;top:unset;rotate:90deg;
+  }
+  .step-num{font-size:3.5rem;margin-bottom:1rem}
+
+  /* Proof */
+  #proof{padding:5rem 0}
+  .proof-grid{grid-template-columns:1fr;gap:12px;margin-top:2.5rem}
+
+  /* CTA */
+  #cta{padding:6rem 0}
+  .price-card{padding:1.8rem 1.5rem;width:100%;max-width:380px}
+  .price-tag{font-size:2.8rem}
+  .cta-btns{flex-direction:column;align-items:center}
+  .cta-btns a{width:100%;max-width:320px;justify-content:center}
+  .cta-note{font-size:.68rem}
+  .cta-note span{display:none}
+  /* stack cta note on mobile */
+  .cta-note-inner{display:flex;flex-direction:column;gap:.3rem;align-items:center}
+
+  /* Footer */
+  footer{padding:2rem 0}
+  .foot-inner{flex-direction:column;align-items:flex-start;gap:1.4rem}
+  .foot-links{gap:1.4rem}
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — SMALL MOBILE (≤ 400px)
+═══════════════════════════════════════════════ */
+@media(max-width:400px){
+  .hero-h1{font-size:2rem}
+  .kiosk{width:148px}
+  .ped-base{width:148px}
+  .ped-shadow{width:168px}
+  .kiosk-scene{min-height:320px}
+  .eyebrow{font-size:.6rem;padding:.3rem .8rem}
+  .price-card{padding:1.5rem 1.2rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="logo-icon">
+      <img src="images/websitelogo.png" alt="Attendify logo">
+    </div>
+    Attendify
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#specs">Specs</a>
+    <a href="#how">How it works</a>
+    <a href="#proof">Reviews</a>
+    <a href="#cta" class="nav-cta">Order — $349</a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU DRAWER -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features" class="mob-link">Features</a>
+  <a href="#specs" class="mob-link">Specs</a>
+  <a href="#how" class="mob-link">How it works</a>
+  <a href="#proof" class="mob-link">Reviews</a>
+  <a href="#cta" class="mob-link mob-cta">Order for $349</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-mesh"></div>
+  <div class="hero-inner">
+
+    <div class="hero-copy">
+      <div class="eyebrow"><div class="eyebrow-dot"></div>Built for Speed · Powered by Raspberry Pi 5</div>
+      <h1 class="hero-h1">
+        <span class="line-plain">Attendance,</span>
+        <span class="line-grad">automated.</span>
+      </h1>
+      <p class="hero-desc">A smart attendance kiosk that identifies students by face the moment they walk in — logs the class, prints the sheet, zero teacher effort.</p>
+      <div class="hero-btns">
+        <a href="#cta" class="btn-primary">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><path d="M2 2h10l-1.5 8H3.5L2 2z"/><circle cx="5" cy="12.5" r="1" fill="white"/><circle cx="9" cy="12.5" r="1" fill="white"/></svg>
+          Order for $349
+        </a>
+        <a href="#features" class="btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 12,7 3,12"/></svg>
+          Explore features
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="n">&lt;0.4s</div><div class="l">Recognition</div></div>
+        <div class="hstat"><div class="n">99.7%</div><div class="l">Accuracy</div></div>
+        <div class="hstat"><div class="n">500+</div><div class="l">Profiles</div></div>
+        <div class="hstat"><div class="n">0</div><div class="l">Cloud needed</div></div>
+      </div>
+    </div>
+
+    <!-- ATM KIOSK ILLUSTRATION -->
+    <div class="kiosk-scene">
+      <div class="kiosk-floor-glow"></div>
+      <div class="kiosk-wrap">
+        <div class="kiosk">
+          <div class="kiosk-upper">
+            <div class="ku-top">
+              <div class="ku-logo-wrap">
+                <div class="ku-logo-icon">
+                  <img src="images/websitelogo.png" alt="Attendify">
+                </div>
+                <span class="ku-brand">Attendify</span>
+              </div>
+              <div class="ku-leds">
+                <div class="ku-led led-g"></div>
+                <div class="ku-led led-r"></div>
+              </div>
+            </div>
+            <div class="ku-cam-row">
+              <div class="cam-body">
+                <div class="cam-ir"></div>
+                <div class="cam-lens-outer"></div>
+                <div class="cam-label">Face Cam · IR</div>
+                <div class="cam-ir"></div>
+              </div>
+            </div>
+            <div class="ku-screen-housing">
+              <div class="scr-bezel">
+                <div class="scr-body">
+                  <div class="scr-aspect">
+                    <div class="scr-top">
+                      <div class="scr-t-left">
+                        <div class="scr-time">09:00 AM</div>
+                        <div class="scr-class">Math 10-A · Room 204</div>
+                      </div>
+                      <div class="scr-live-badge"><div class="live-dot"></div>LIVE</div>
+                    </div>
+                    <div class="scr-facebox">
+                      <svg class="scr-face-svg" width="32" height="32" viewBox="0 0 40 40" fill="none" stroke="rgba(77,124,255,0.5)" stroke-width="1.5"><circle cx="20" cy="15" r="8"/><path d="M6 37c0-7.73 6.27-14 14-14s14 6.27 14 14"/></svg>
+                    </div>
+                    <div class="scr-status">● IDENTIFYING…</div>
+                    <div class="scr-prog-track"><div class="scr-prog-fill"></div></div>
+                    <div class="scr-rows">
+                      <div class="scr-row"><div class="s-av" style="background:var(--blue)"></div><div class="s-lines"><div class="s-line"></div><div class="s-line s7"></div></div><div class="s-badge bp">Present</div></div>
+                      <div class="scr-row"><div class="s-av" style="background:var(--purple)"></div><div class="s-lines"><div class="s-line"></div><div class="s-line s7"></div></div><div class="s-badge bl">Late</div></div>
+                      <div class="scr-row"><div class="s-av" style="background:var(--red)"></div><div class="s-lines"><div class="s-line"></div><div class="s-line s7"></div></div><div class="s-badge ba">Absent</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ku-buttons">
+              <div class="ku-btn-row"><div class="ku-btn"></div><div class="ku-btn"></div></div>
+              <div class="ku-btn-row"><div class="ku-btn"></div><div class="ku-btn"></div></div>
+              <div class="ku-btn-row"><div class="ku-btn"></div><div class="ku-btn"></div></div>
+            </div>
+            <div class="ku-slot-area">
+              <div class="ku-slot-row">
+                <span class="ku-slot-label">Student ID / QR</span>
+                <span class="ku-slot-pi">RPi5 · AI</span>
+              </div>
+              <div class="ku-reader">
+                <div class="reader-circle"><div class="reader-inner"></div></div>
+                <div class="reader-info">
+                  <div class="reader-tag">NFC / QR Reader</div>
+                  <div class="reader-sub">Manual check-in fallback</div>
+                </div>
+              </div>
+            </div>
+            <div class="ku-printer">
+              <div class="printer-header">
+                <span class="printer-name">Document Printer</span>
+                <span class="printer-rdy">● Ready</span>
+              </div>
+              <div class="printer-slot"></div>
+              <div class="paper-out"></div>
+            </div>
+          </div>
+          <div class="kiosk-lower">
+            <div class="cabinet-lock">
+              <div class="lock-cylinder"></div>
+              <div class="lock-slot"></div>
+            </div>
+            <div class="cabinet-ports">
+              <div class="c-port wide"></div>
+              <div class="c-port wide"></div>
+              <div class="c-port"></div>
+            </div>
+          </div>
+          <div class="kiosk-ped">
+            <div class="ped-base"></div>
+            <div class="ped-shadow"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-strip">
+  <div class="marquee-inner">
+    <span class="mi"><span class="mi-dot"></span>Facial Recognition</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Student Portal</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Built-in Printer</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>10" Touchscreen</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Auto Scheduling</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Web Dashboard</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Raspberry Pi 5</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>100% On-Device</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Facial Recognition</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Student Portal</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Built-in Printer</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>10" Touchscreen</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Auto Scheduling</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Web Dashboard</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>Raspberry Pi 5</span><span class="m-sep">·</span>
+    <span class="mi"><span class="mi-dot"></span>100% On-Device</span><span class="m-sep">·</span>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="features-header">
+      <div class="pop pop-left">
+        <div class="sec-label">Features</div>
+        <h2 class="sec-h2">Everything a school<br>needs. <em>Nothing it doesn't.</em></h2>
+      </div>
+      <div class="pop pop-right d1">
+        <p style="font-size:.97rem;color:var(--muted);line-height:1.72;font-weight:300">Purpose-built for classrooms. Teachers focus on teaching — Attendify handles the rest, automatically, from the moment the bell rings.</p>
+      </div>
+    </div>
+
+    <div class="bento">
+      <div class="bc c5 pop d1">
+        <div class="card-icon ic-bl"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="9" r="4.5"/><path d="M3 20c0-4.42 3.58-8 8-8s8 3.58 8 8"/><circle cx="11" cy="11" r="10" stroke-opacity=".2"/></svg></div>
+        <div class="card-chip">Core</div>
+        <h3 class="card-h3">Real-time Face ID</h3>
+        <p class="card-p">Students walk past the kiosk — identified in under 0.4 seconds. No stopping, no badges, no apps. Works in low light with dual IR sensors.</p>
+        <div class="mini-vis"><div class="vis-dots"><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div><div class="vd"></div></div></div>
+      </div>
+
+      <div class="bc c7 pop d2" style="border-color:rgba(100,220,255,.15)">
+        <div class="card-icon ic-cy"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="8" r="4"/><path d="M4 19c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M15 3l2 2-4 4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17" cy="17" r="3.5" fill="rgba(100,220,255,.1)" stroke="currentColor"/><path d="M16 17h2M17 16v2"/></svg></div>
+        <div class="card-chip" style="border-color:rgba(100,220,255,.2);color:#64dcff">New</div>
+        <h3 class="card-h3">Student Self-Enrollment Portal</h3>
+        <p class="card-p">Students create their own account directly at the website — enter their name, student ID, and take a face photo. No admin bottleneck. Accounts are instantly active for attendance tracking.</p>
+        <div class="mini-vis"><div class="vis-portal"><div class="portal-steps">
+          <div class="portal-step"><div class="portal-step-num">1</div><div class="portal-step-text">Enter Student ID &amp; Name</div></div>
+          <div class="portal-step"><div class="portal-step-num">2</div><div class="portal-step-text">Face capture at the kiosk camera</div></div>
+          <div class="portal-step"><div class="portal-step-num">3</div><div class="portal-step-text">Account active — ready for class</div></div>
+        </div></div></div>
+      </div>
+
+      <div class="bc c7 pop d1">
+        <div class="card-icon ic-or"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="18" height="17" rx="2.5"/><path d="M2 9h18M8 1v4M14 1v4"/></svg></div>
+        <div class="card-chip">Automation</div>
+        <h3 class="card-h3">Automatic Class Scheduling</h3>
+        <p class="card-p">Set the timetable once. When Math 10A starts at 9:00 AM, Attendify automatically begins tracking — no teacher input, ever. Class ends, attendance stops. Every session logged perfectly.</p>
+        <div class="mini-vis"><div class="vis-sched">
+          <div class="sched-row"><div class="sched-time">9:00</div><div class="sched-bar"><div class="sched-fill" style="width:88%;background:linear-gradient(90deg,var(--orange),var(--purple))"></div></div><div class="sched-name">Math 10A</div></div>
+          <div class="sched-row"><div class="sched-time">10:30</div><div class="sched-bar"><div class="sched-fill" style="width:62%;background:linear-gradient(90deg,var(--purple),var(--blue))"></div></div><div class="sched-name">Science 9B</div></div>
+          <div class="sched-row"><div class="sched-time">1:00</div><div class="sched-bar"><div class="sched-fill" style="width:45%;background:linear-gradient(90deg,var(--blue),var(--green))"></div></div><div class="sched-name">English 11</div></div>
+        </div></div>
+      </div>
+
+      <div class="bc c5 pop d2">
+        <div class="card-icon ic-pu"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="1" width="16" height="20" rx="2.5"/><line x1="8" y1="18" x2="14" y2="18" stroke-linecap="round"/></svg></div>
+        <div class="card-chip">Hardware</div>
+        <h3 class="card-h3">10" Touchscreen Tablet</h3>
+        <p class="card-p">The embedded 10-inch display lets teachers navigate sessions, view live rosters, and manually override records. Students also use it to self-enroll.</p>
+        <div class="mini-vis"><div class="vis-touch">
+          <div class="t-btn active">▶ Start Class</div>
+          <div class="t-btn">≡ Roster</div>
+          <div class="t-btn">✎ Override</div>
+          <div class="t-btn">⊕ Enroll</div>
+        </div></div>
+      </div>
+
+      <div class="bc c4 pop d1">
+        <div class="card-icon ic-re"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 7V3h10v4"/><rect x="2" y="7" width="18" height="9" rx="1.5"/><path d="M6 12h10M6 15.5h6"/></svg></div>
+        <div class="card-chip">Hardware</div>
+        <h3 class="card-h3">Built-in Printer</h3>
+        <p class="card-p">Print a full attendance sheet per class instantly. Hand a physical record to any teacher in seconds — no separate printer needed.</p>
+        <div class="mini-vis"><div class="vis-print"><div class="p-sheet"><div class="p-logo-bar"></div><div class="p-line"></div><div class="p-line ps"></div><div class="p-line"></div><div class="p-line"></div><div class="p-line ps"></div></div></div></div>
+      </div>
+
+      <div class="bc c4 pop d2">
+        <div class="card-icon ic-gr"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="20" height="15" rx="2.5"/><path d="M1 8h20"/><circle cx="4" cy="5.5" r=".9" fill="currentColor"/><circle cx="7.5" cy="5.5" r=".9" fill="currentColor"/></svg></div>
+        <div class="card-chip">Dashboard</div>
+        <h3 class="card-h3">Web Dashboard</h3>
+        <p class="card-p">Teachers and admins manage schedules, track every class, review student accounts, and export reports — all from any browser on the school network.</p>
+        <div class="mini-vis"><div class="vis-web">
+          <div class="web-chrome"><div style="display:flex;gap:3px"><div class="wd-dot" style="background:var(--red);width:5px;height:5px;border-radius:50%"></div><div class="wd-dot" style="background:var(--orange);width:5px;height:5px;border-radius:50%"></div><div class="wd-dot" style="background:var(--green);width:5px;height:5px;border-radius:50%"></div></div><div class="web-url-bar"></div></div>
+          <div class="web-content"><div class="web-line" style="width:90%"></div><div class="web-line" style="width:70%"></div><div class="web-line" style="width:82%"></div></div>
+        </div></div>
+      </div>
+
+      <div class="bc c4 pop d3">
+        <div class="card-icon ic-bl"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,16 7,10 11,13 16,7 20,11"/><line x1="2" y1="20" x2="20" y2="20"/></svg></div>
+        <div class="card-chip">Analytics</div>
+        <h3 class="card-h3">Attendance Insights</h3>
+        <p class="card-p">Weekly trends, late-arrival patterns, habitual absentees — auto-surfaced. One-click exports for parents and admin.</p>
+        <div class="mini-vis"><div class="vis-bars"><div class="vbar" style="height:55%;animation-delay:.1s"></div><div class="vbar" style="height:78%;animation-delay:.2s"></div><div class="vbar" style="height:62%;animation-delay:.3s"></div><div class="vbar" style="height:92%;animation-delay:.4s"></div><div class="vbar" style="height:68%;animation-delay:.5s"></div><div class="vbar" style="height:82%;animation-delay:.6s"></div><div class="vbar" style="height:50%;animation-delay:.7s"></div></div></div>
+      </div>
+
+      <div class="bc c8 pop d1">
+        <div class="card-icon ic-gr"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2L3 5.5v7c0 4.5 3.5 8.7 8 10 4.5-1.3 8-5.5 8-10v-7L11 2z"/><polyline points="7.5,11 9.5,13 14.5,9"/></svg></div>
+        <div class="card-chip">Privacy</div>
+        <h3 class="card-h3">Fully On-Device · GDPR Ready</h3>
+        <p class="card-p">All facial data and student accounts live on the Raspberry Pi 5 inside your school. No cloud. No subscriptions. No third parties ever see student data. Student self-enrollment data stays local — compliant by design, owned by your school entirely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SPECS -->
+<section id="specs">
+  <div class="container">
+    <div class="specs-layout">
+      <div>
+        <div class="pop pop-left">
+          <div class="sec-label">Hardware</div>
+          <h2 class="sec-h2">Engineered on<br><em>Raspberry Pi 5.</em></h2>
+          <p class="sec-body">The BCM2712 quad-core A76 at 2.4GHz delivers genuine AI performance — no cloud dependency, no monthly fees, no internet required.</p>
+        </div>
+        <div class="specs-table pop pop-left d1">
+          <div class="spec-row"><div class="spec-k"><div class="spec-k-dot"></div>Processor</div><div class="spec-v">BCM2712 · 4× A76 @ 2.4GHz</div></div>
+          <div class="spec-row"><div class="spec-k"><div class="spec-k-dot"></div>Memory</div><div class="spec-v">8 GB LPDDR4X</div></div>
+          <div class="spec-row"><div class="spec-k"><div class="spec-k-dot"></div>Camera</div><div class="spec-v">Sony IMX708 · 12MP autofocus</div></div>
+          <div class="spec-row"><div class="spec-k"><div class="spec-k-dot"></div>Sensors</div><div class="spec-v">IR + RGB dual (anti-spoof)</div></div>
+          <div class="spec-row"><div class="spec-k"><div class="spec-k-dot"></div>Display</div><div class="spec-v">10" IPS Touchscreen · 1280×800</div></div>
+          <div class="spec-row"><div class="spec-k"><div class="spec-k-dot"></div>Printer</div><div class="spec-v">Document Printer · USB · A4</div></div>
+          <div class="spec-row"><div class="spec-k"><div class="spec-k-dot"></div>Network</div><div class="spec-v">WiFi 6 · Gigabit · PoE+ optional</div></div>
+          <div class="spec-row"><div class="spec-k"><div class="spec-k-dot"></div>Power</div><div class="spec-v">USB-C 5V/5A or PoE+</div></div>
+        </div>
+      </div>
+      <div class="pop pop-right">
+        <div class="pi-board">
+          <div class="pi-l1"></div><div class="pi-l2"></div>
+          <div class="pi-chip">BCM2712</div>
+          <div class="pi-ram"></div><div class="pi-eth"></div>
+          <div class="pi-usbs"><div class="pi-usb-port"></div><div class="pi-usb-port"></div></div>
+          <div class="pi-gpio"><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div><div class="g-pin"></div></div>
+          <div class="pi-label">Raspberry Pi 5 · 8 GB</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="pop" style="text-align:center;max-width:580px;margin:0 auto">
+      <div class="sec-label" style="justify-content:center">Process</div>
+      <h2 class="sec-h2" style="text-align:center">Up and running in<br><em>three steps.</em></h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card pop d1">
+        <div class="step-icon-wrap" style="background:rgba(77,124,255,.1)"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--blue)" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l3 3"/></svg></div>
+        <div class="step-num">01</div>
+        <h3 class="step-h">Mount & Power</h3>
+        <p class="step-p">Place Attendify at your classroom entrance. Plug in the electrical socket. The kiosk boots and is fully ready in under 20 seconds.</p>
+      </div>
+      <div class="step-card pop d2">
+        <div class="step-icon-wrap" style="background:rgba(160,108,248,.1)"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--purple)" stroke-width="1.5"><circle cx="9" cy="6" r="3.5"/><path d="M3 17c0-3.31 2.69-6 6-6s6 2.69 6 6"/><path d="M13 3l2 2-4 4"/></svg></div>
+        <div class="step-num">02</div>
+        <h3 class="step-h">Students Self-Enroll</h3>
+        <p class="step-p">Each student can go to the website, register there, can submit their photos, and the account is ready — no admin needed.</p>
+      </div>
+      <div class="step-card pop d3">
+        <div class="step-icon-wrap" style="background:rgba(48,209,88,.1)"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M3 9l4 4L15 5"/></svg></div>
+        <div class="step-num">03</div>
+        <h3 class="step-h">It runs itself</h3>
+        <p class="step-p">Set the timetable once. From that point Attendify tracks every class on schedule automatically. Print slips on demand. Export reports anytime.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF -->
+<section id="proof">
+  <div class="container">
+    <div class="pop" style="text-align:center">
+      <div class="sec-label" style="justify-content:center">Testimonials</div>
+      <h2 class="sec-h2" style="text-align:center;margin:0 auto">Trusted by <em>real schools.</em></h2>
+    </div>
+    <div class="proof-grid">
+      <div class="proof-card pop d1">
+        <div class="proof-stars">★★★★★</div>
+        <p class="proof-quote">"We used to spend 5 minutes every period on roll call. Now it's zero. Attendify just works — teachers didn't need any training at all."</p>
+        <div class="proof-author"><div class="proof-av">MA</div><div><div class="proof-name">Mrs. Aquino</div><div class="proof-role">Principal · San Pedro High School</div></div></div>
+      </div>
+      <div class="proof-card pop d2">
+        <div class="proof-stars">★★★★★</div>
+        <p class="proof-quote">"The self-enrollment was brilliant — we let all 800 students register themselves over two days. No IT work. The kiosk just handled it."</p>
+        <div class="proof-author"><div class="proof-av">RD</div><div><div class="proof-name">Mr. Dela Cruz</div><div class="proof-role">IT Coordinator · Westview Academy</div></div></div>
+      </div>
+      <div class="proof-card pop d3">
+        <div class="proof-stars">★★★★☆</div>
+        <p class="proof-quote">"Parents love the weekly reports we export from the dashboard. The printed slips teachers get each period are a fantastic touch."</p>
+        <div class="proof-author"><div class="proof-av">SL</div><div><div class="proof-name">Ms. Santos</div><div class="proof-role">Head Teacher · Lakeview Elementary</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-bg"></div>
+  <div class="container">
+    <div class="pop" style="text-align:center;position:relative;z-index:2">
+      <div class="cta-eyebrow"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="var(--green)"/></svg>Now shipping</div>
+      <h2 class="cta-h2">Ready to transform attendance<br>at your <em>school?</em></h2>
+      <p class="cta-sub">Complete kit — Raspberry Pi 5 8GB · Sony IMX708 · 10" Touchscreen · Built-in Printer · Student Portal · Pre-loaded software · Free setup support</p>
+      <div class="price-card pop d1">
+        <div class="price-tag">$349</div>
+        <div class="price-sub">One-time purchase · No subscription</div>
+        <div class="price-includes">
+          <div class="price-item"><span class="price-check">✓</span> Raspberry Pi 5 8GB</div>
+          <div class="price-item"><span class="price-check">✓</span> Sony IMX708 12MP Camera + IR</div>
+          <div class="price-item"><span class="price-check">✓</span> 10" IPS Touchscreen</div>
+          <div class="price-item"><span class="price-check">✓</span> Built-in Document Printer</div>
+          <div class="price-item"><span class="price-check">✓</span> Student Self-Enrollment Portal</div>
+          <div class="price-item"><span class="price-check">✓</span> Web Dashboard + Auto Scheduling</div>
+          <div class="price-item"><span class="price-check">✓</span> Free setup support</div>
+        </div>
+      </div>
+      <div class="cta-btns">
+        <a href="#" class="btn-primary" style="padding:1.05rem 2.5rem;font-size:1rem">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><path d="M2 2h10l-1.5 8H3.5L2 2z"/><circle cx="5" cy="12.5" r="1" fill="white"/><circle cx="9" cy="12.5" r="1" fill="white"/></svg>
+          Order for $349
+        </a>
+        <a href="#" class="btn-ghost" style="padding:1.05rem 2rem;font-size:1rem">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="12" height="10" rx="1.5"/><path d="M1 5l6 4 6-4"/></svg>
+          School enquiry
+        </a>
+      </div>
+      <p class="cta-note">
+        <span class="cta-note-inner">
+          <span>Volume discounts · Educational pricing · PoE+ bundle · Multi-unit schools</span>
+        </span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="foot-inner">
+      <a href="#" class="nav-logo" style="text-decoration:none;color:var(--text)">
+        <div class="logo-icon" style="width:28px;height:28px">
+          <img src="images/websitelogo.png" alt="Attendify">
+        </div>
+        Attendify
+      </a>
+      <div class="foot-links">
+        <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Support</a><a href="#">Contact</a>
+      </div>
+      <div class="foot-copy">© 2025 Attendify, Inc.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* ── Intersection observer for scroll animations ── */
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.08, rootMargin:'0px 0px -30px 0px' });
+  document.querySelectorAll('.pop,.pop-left,.pop-right').forEach(el => io.observe(el));
+
+  /* ── Smooth scroll ── */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href');
+      if(id.length > 1){
+        e.preventDefault();
+        // close mobile menu if open
+        closeMobileMenu();
+        const t = document.querySelector(id);
+        if(t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 70, behavior:'smooth' });
+      }
+    });
+  });
+
+  /* ── Hero entrance animations ── */
+  const els = ['.eyebrow','.line-plain','.line-grad','.hero-desc','.hero-btns','.hero-stats'];
+  els.forEach((sel, i) => {
+    const el = document.querySelector(sel);
+    if(!el) return;
+    el.style.cssText += 'opacity:0;transform:translateY(20px);transition:opacity .8s cubic-bezier(.2,1,.3,1),transform .8s cubic-bezier(.2,1,.3,1);transition-delay:' + (.2 + i * .1) + 's';
+    requestAnimationFrame(() => requestAnimationFrame(() => { el.style.opacity='1'; el.style.transform='translateY(0)'; }));
+  });
+
+  const k = document.querySelector('.kiosk-wrap');
+  if(k){
+    k.style.cssText += 'opacity:0;transform:translateY(28px) scale(.97);transition:opacity .9s cubic-bezier(.2,1,.3,1),transform .9s cubic-bezier(.2,1,.3,1);transition-delay:.5s';
+    requestAnimationFrame(() => requestAnimationFrame(() => { k.style.opacity='1'; k.style.transform='translateY(0) scale(1)'; }));
+  }
+
+  /* ── Mobile hamburger menu ── */
+  const toggle = document.getElementById('navToggle');
+  const menu   = document.getElementById('mobileMenu');
+
+  function closeMobileMenu(){
+    toggle.classList.remove('open');
+    menu.classList.remove('open');
+    menu.style.display = '';
+  }
+
+  toggle.addEventListener('click', () => {
+    const isOpen = menu.classList.contains('open');
+    if(isOpen){
+      closeMobileMenu();
+    } else {
+      menu.style.display = 'flex';
+      // force reflow before adding class for transition
+      requestAnimationFrame(() => requestAnimationFrame(() => menu.classList.add('open')));
+      toggle.classList.add('open');
+    }
+  });
+
+  // Close menu on outside click
+  document.addEventListener('click', (e) => {
+    if(!toggle.contains(e.target) && !menu.contains(e.target)){
+      closeMobileMenu();
+    }
+  });
+
+  // Close menu on resize to desktop
+  window.addEventListener('resize', () => {
+    if(window.innerWidth > 768) closeMobileMenu();
+  });
+
+})();
+</script>
+</body>
+</html>

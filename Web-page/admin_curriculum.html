@@ -1,0 +1,469 @@
+
+    <!-- SweetAlert2 (modern replacement for sweet alert) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #f4f7fb;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 1300px;
+            width: 100%;
+        }
+        h1 {
+            font-weight: 400;
+            font-size: 2.2rem;
+            color: #1e2b3a;
+            margin: 0 0 8px 0;
+            border-bottom: 3px solid #0d6efd;
+            display: inline-block;
+            padding-bottom: 6px;
+        }
+        .sub {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        .semester-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .sem-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.05), 0 2px 8px rgba(0,20,40,0.1);
+            width: 280px;
+            padding: 18px 16px 20px 16px;
+            transition: 0.2s;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .sem-card:hover {
+            box-shadow: 0 20px 32px rgba(0,60,120,0.12);
+        }
+        .sem-header {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 18px;
+            border-left: 5px solid #0d6efd;
+            padding-left: 16px;
+        }
+        .sem-header span {
+            background: #e9ecf3;
+            border-radius: 40px;
+            font-size: 1rem;
+            padding: 4px 14px;
+            font-weight: 500;
+            color: #0d6efd;
+        }
+        .subject-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .subject-item {
+            background: #f9fafc;
+            border-radius: 40px;
+            padding: 6px 16px 6px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #dee2ed;
+            transition: 0.1s;
+        }
+        .subject-name {
+            font-weight: 500;
+            color: #1e2b3a;
+            font-size: 0.94rem;
+            max-width: 160px;
+        }
+        .check-wrapper {
+            display: flex;
+            align-items: center;
+        }
+        .check-wrapper input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #0d6efd;
+            border-radius: 6px;
+        }
+        .action-row {
+            margin: 28px 0 18px;
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: white;
+            border: 1px solid #b4c1d9;
+            padding: 12px 32px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1e2b3a;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.02);
+            transition: 0.2s;
+        }
+        .btn-primary {
+            background: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+            box-shadow: 0 6px 14px rgba(13,110,253,0.3);
+        }
+        .btn-primary:hover {
+            background: #0b5ed7;
+            transform: translateY(-2px);
+        }
+        .btn-outline {
+            background: white;
+        }
+        .btn-outline:hover {
+            background: #e2eaf6;
+            border-color: #7b98c7;
+        }
+        .status-badge {
+            margin-top: 20px;
+            font-size: 1rem;
+            background: #d1e0fd80;
+            padding: 16px 24px;
+            border-radius: 80px;
+            text-align: center;
+            color: #102a4c;
+            font-weight: 500;
+            backdrop-filter: blur(2px);
+        }
+        .bold {
+            font-weight: 700;
+            color: #0d6efd;
+        }
+        hr {
+            margin: 20px 0 10px;
+            border: 1px dashed #cbd5e1;
+        }
+        .footer-note {
+            color: #4a5f7a;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📘 CPE curriculum</h1>
+    <div class="sub">✔ mark passed subjects → click "validate all semesters"</div>
+
+    <!-- semester panels will be injected here -->
+    <div id="semesterContainer" class="semester-grid"></div>
+
+    <div class="action-row">
+        <button class="btn btn-primary" id="validateBtn">🔍 VALIDATE ALL SEMESTERS</button>
+        <button class="btn btn-outline" id="clearBtn">⟲ clear all checks</button>
+    </div>
+    <div id="globalMessage" class="status-badge">⏳ Ready — select completed subjects</div>
+</div>
+
+<script>
+(function() {
+    // ---------- embedded curriculum (exactly from given file) ----------
+    const curriculum = {
+        "1-2": [
+            { name: "Calculus 2", prerequisite: ["Calculus 1", "Mathematics for Engineers"] },
+            { name: "PATHFit 2", prerequisite: ["PATHFit 1"] },
+            { name: "NSTP 2", prerequisite: ["NSTP 1"] }
+        ],
+        "2-1": [
+            { name: "Differential Equations", prerequisite: ["Calculus 2"] },
+            { name: "Engineering Data Analysis", prerequisite: ["Calculus 1"] },
+            { name: "Data Structure And Algorithm Analysis", prerequisite: ["Programming Logic and Design"] },
+            { name: "Discrete Mathematics", prerequisite: ["Calculus 1"] },
+            { name: "Fundamental of Electrical Circuits", prerequisite: ["Physics for Engineers"] },
+            { name: "Fundamentals of Electronics Circuits", prerequisite: ["Physics for Engineers"] },
+            { name: "PATHFit 3", prerequisite: ["PATHFit 2"] }
+        ],
+        "2-2": [
+            { name: "Advance Engineering Math for CPE", prerequisite: ["Differential Equations"] },
+            { name: "Database Management System", prerequisite: ["Data Structures", "Algorithm Analysis"] },
+            { name: "Logic Circuits and Design", prerequisite: ["Fundamentals of Electronic Circuits"] },
+            { name: "Object-oriented Programming", prerequisite: ["Programming Logic and Design"] },
+            { name: "PATHFfit 4", prerequisite: ["PATHFfit 3"] }
+        ],
+        "3-1": [
+            { name: "Operating Systems", prerequisite: ["Data Structure", "Algorithm Analysis"] },
+            { name: "Introduction to HDL", prerequisite: ["Programming and Logic Design", "Fundamentals of Electronic Circuits"] },
+            { name: "Feedback and Control Systems", prerequisite: ["Fundamentals of Electronic Circuits"] },
+            { name: "Microprocessors", prerequisite: ["Logic Circuits and Design"] },
+            { name: "Computer Engineering Drafting and Design", prerequisite: ["Fundamentals of Electronic Circuits"] },
+            { name: "Software Design", prerequisite: ["Data Structures and Algorithm Analysis", "Database Management System", "Object-orented Programming"] },
+            { name: "Numerical Methods", prerequisite: ["Advance Engineering Math for CPE"] }
+        ],
+        "3-2": [
+            { name: "Computer Architecture and Organization", prerequisite: ["Microprocessors"] },
+            { name: "Methods of Research", prerequisite: ["Engineering Data Analysis"] },
+            { name: "Data and Digital Communications", prerequisite: ["Fundamentals of Electronic Circuits"] },
+            { name: "Fundamentals of Mixed Signals and Sensors", prerequisite: ["Fundamentals of Electronic Circuits"] },
+            { name: "Embedded Systems 1", prerequisite: ["Microprocessors"] },
+            { name: "CpE Elective 1", prerequisite: ["Software Design"] }
+        ],
+        "4-1": [
+            { name: "Computer Networks and Security", prerequisite: ["Digital and Data Communications"] },
+            { name: "CpE Practice and Design 1", prerequisite: ["Microproccesors", "Methods of Research"] },
+            { name: "Digital Signal Processing", prerequisite: ["Feedback and Control Systems"] },
+            { name: "Embedded Systems 2", prerequisite: ["Embedded Systems 1"] },
+            { name: "CpE Elective 2", prerequisite: ["CpE Elective 1"] }
+        ],
+        "4-2": [
+            { name: "CpE Practice and Design 2", prerequisite: ["CpE Practice and Design 1"] },
+            { name: "CpE Elective 3", prerequisite: ["CpE Elective 2"] }
+        ]
+    };
+
+    // ---------- helper to collect all subject names across curriculum (for prereq matching) ----------
+    const allSubjects = new Set();
+    Object.values(curriculum).forEach(sem => {
+        sem.forEach(subj => allSubjects.add(subj.name));
+    });
+    // also include common base prerequisites that are not in the list? we add them manually for cleaner matching
+    const extraBase = [
+        "Calculus 1", "Mathematics for Engineers", "PATHFit 1", "NSTP 1",
+        "Programming Logic and Design", "Physics for Engineers", "Data Structures",
+        "Algorithm Analysis", "Fundamentals of Electronic Circuits", "Differential Equations",
+        "Programming and Logic Design", "Data Structure and Algorithm Analysis", 
+        "Object-orented Programming", "Digital and Data Communications", "Microproccesors", 
+        "Feedback and Control Systems", "Embedded Systems 1", "Software Design",
+        "Logic Circuits and Design", "Fundamentals of Electronic Circuits", "Engineering Data Analysis",
+        "PATHFfit 3", "Advance Engineering Math for CPE", "Database Management System",
+        "Data Structures and Algorithm Analysis", "Microprocessors", "Methods of Research",
+        "CpE Elective 1", "CpE Elective 2"
+    ];
+    extraBase.forEach(b => allSubjects.add(b));
+
+    // ---------- build semester panels ----------
+    const container = document.getElementById('semesterContainer');
+    const semOrder = ["1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"];
+
+    function renderSemesters() {
+        container.innerHTML = '';
+        semOrder.forEach(semKey => {
+            const subjects = curriculum[semKey];
+            if (!subjects) return;
+
+            const card = document.createElement('div');
+            card.className = 'sem-card';
+            card.dataset.semester = semKey;
+
+            const header = document.createElement('div');
+            header.className = 'sem-header';
+            header.innerHTML = `Year ${semKey.charAt(0)} · sem ${semKey.charAt(2)} <span>${semKey}</span>`;
+            card.appendChild(header);
+
+            const listDiv = document.createElement('div');
+            listDiv.className = 'subject-list';
+
+            subjects.forEach(sub => {
+                const item = document.createElement('div');
+                item.className = 'subject-item';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'subject-name';
+                nameSpan.textContent = sub.name;
+                item.appendChild(nameSpan);
+
+                const checkWrap = document.createElement('div');
+                checkWrap.className = 'check-wrapper';
+
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                chk.classList.add('sub-check');
+                chk.dataset.subject = sub.name;
+                chk.dataset.sem = semKey;
+
+                checkWrap.appendChild(chk);
+                item.appendChild(checkWrap);
+                listDiv.appendChild(item);
+            });
+
+            card.appendChild(listDiv);
+            container.appendChild(card);
+        });
+    }
+    renderSemesters();
+
+    // ---------- helper: get set of all checked subjects (by name) ----------
+    function getPassedSubjects() {
+        const passed = new Set();
+        document.querySelectorAll('.sub-check:checked').forEach(cb => {
+            passed.add(cb.dataset.subject);
+        });
+        return passed;
+    }
+
+    // ---------- prerequisite check for a single subject ----------
+    function meetsPrerequisite(subjectName, passedSet) {
+        // find subject entry in curriculum (any semester)
+        let prereqList = null;
+        for (let sem of semOrder) {
+            const found = curriculum[sem]?.find(s => s.name === subjectName);
+            if (found) {
+                prereqList = found.prerequisite;
+                break;
+            }
+        }
+
+        if (!prereqList) {
+
+            return passedSet.has(subjectName);
+        }
+
+        return prereqList.every(p => {
+
+            if (passedSet.has(p)) return true;
+
+            // manual alias map for common mismatches (based on curriculum given)
+            const aliases = {
+                "Data Structures": "Data Structure",
+                "Data Structure": "Data Structures",
+                "Algorithm Analysis": "Algorithm Analysis",
+                "Programming Logic and Design": "Programming Logic and Design",
+                "Programming and Logic Design": "Programming and Logic Design",
+                "Object-oriented Programming": "Object-orented Programming",
+                "Object-orented Programming": "Object-oriented Programming",
+                "Fundamentals of Electronic Circuits": "Fundamentals of Electronic Circuits",
+                "Microprocessors": "Microprocessors",
+                "Microproccesors": "Microprocessors",   // typo in CpE Practice prereq
+                "Digital and Data Communications": "Data and Digital Communications",
+                "Data and Digital Communications": "Digital and Data Communications",
+                "PATHFit 3": "PATHFfit 3",
+                "PATHFfit 3": "PATHFit 3",
+                "PATHFfit 4": "PATHFfit 4",
+                "Differential Equations": "Differential Equations",
+                "Advance Engineering Math for CPE": "Advance Engineering Math for CPE",
+                "Software Design": "Software Design",
+                "Database Management System": "Database Management System",
+                "Data Structures and Algorithm Analysis": "Data Structures and Algorithm Analysis",
+                "Logic Circuits and Design": "Logic Circuits and Design",
+                "Methods of Research": "Methods of Research",
+                "CpE Elective 1": "CpE Elective 1",
+                "Embedded Systems 1": "Embedded Systems 1"
+            };
+            const alternative = aliases[p] || (aliases[p] ? aliases[p] : null);
+            if (alternative && passedSet.has(alternative)) return true;
+            // also check lowercase includes
+            const lowerP = p.toLowerCase();
+            for (let passed of passedSet) {
+                if (passed.toLowerCase().includes(lowerP) || lowerP.includes(passed.toLowerCase())) return true;
+            }
+            return false;
+        });
+    }
+
+    // ---------- main validation ----------
+    function validateAll() {
+        const passed = getPassedSubjects();
+        const errors = [];      // collect { sem, subject, missing }
+        let anyInvalid = false;
+
+        // We'll iterate over all checkboxes (only checked ones) and test prerequisites.
+        document.querySelectorAll('.sub-check:checked').forEach(cb => {
+            const subject = cb.dataset.subject;
+            const semester = cb.dataset.sem;
+            const ok = meetsPrerequisite(subject, passed);
+            if (!ok) {
+                // find missing prereq list for message
+                let prereqList = [];
+                for (let s of semOrder) {
+                    const f = curriculum[s]?.find(x => x.name === subject);
+                    if (f) { prereqList = f.prerequisite; break; }
+                }
+                errors.push({ semester, subject, missing: prereqList });
+                anyInvalid = true;
+            }
+        });
+
+        if (anyInvalid) {
+            let errorList = errors.map(e => `• ${e.subject} (${e.semester}) requires: ${e.missing.join(' · ')}`).join('\n');
+            Swal.fire({
+                icon: 'error',
+                title: '❌ Failed prerequisites',
+                html: `<span style="white-space: pre-line;">Some checked subjects missing prerequisites:<br>${errorList}</span>`,
+                confirmButtonColor: '#d33',
+                background: '#fff0f0'
+            });
+            document.getElementById('globalMessage').innerHTML = '⛔ status: <span class="bold">FAILED</span> — missing prerequisites.';
+            return;
+        }
+
+        // No failed: check for "in progress" — a subject that is NOT checked but has all prerequisites satisfied.
+        // We'll gather all subjects from curriculum, and see if for any unchecked subject, prerequisites are met.
+        let availableNotTaken = [];
+        semOrder.forEach(sem => {
+            curriculum[sem].forEach(sub => {
+                if (!passed.has(sub.name)) {
+                    if (meetsPrerequisite(sub.name, passed)) {
+                        availableNotTaken.push(`${sub.name} (${sem})`);
+                    }
+                }
+            });
+        });
+
+        if (availableNotTaken.length > 0) {
+            // "In progress" or "incomplete" – we treat as "in progress" (some subjects ready but not passed)
+            Swal.fire({
+                icon: 'info',
+                title: '⏳ In progress / Incomplete',
+                html: `You haven't marked these available subjects as passed:<br><span style="font-size:0.9rem;">${availableNotTaken.slice(0, 8).join(' · ')}${availableNotTaken.length>8?' …':''}</span>`,
+                confirmButtonColor: '#0d6efd',
+                background: '#ecf3ff'
+            });
+            document.getElementById('globalMessage').innerHTML = '🟡 status: <span class="bold">IN PROGRESS</span> — some eligible subjects not yet taken.';
+            return;
+        }
+
+        // else all subjects that can be taken are checked → but are there future subjects? that's fine. they have 'completed' all up to some point.
+        Swal.fire({
+            icon: 'success',
+            title: '✅ All clear',
+            text: 'All checked subjects satisfy prerequisites. No incomplete available subjects.',
+            confirmButtonColor: '#198754',
+        });
+        document.getElementById('globalMessage').innerHTML = '✅ status: <span class="bold">CLEAR</span> — no missing prerequisites.';
+    }
+
+    // ---------- clear all checkboxes ----------
+    function clearAll() {
+        document.querySelectorAll('.sub-check').forEach(cb => cb.checked = false);
+        document.getElementById('globalMessage').innerHTML = '⏳ cleared — ready';
+    }
+
+    // attach listeners
+    document.getElementById('validateBtn').addEventListener('click', validateAll);
+    document.getElementById('clearBtn').addEventListener('click', clearAll);
+
+    // optional: update message on any checkbox change
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('sub-check')) {
+            // just update info text
+            document.getElementById('globalMessage').innerHTML = '✎ checks changed — click validate';
+        }
+    });
+
+})();
+</script>
+<!-- small footnote -->
+<div style="margin-top: 28px; font-size: 0.85rem; color: #6c7a96;">
+    ⚡ prerequisites are matched with basic alias handling (Microproccesors → Microprocessors, etc.)
+</div>
+</body>
+</html>

@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
+<title>Student Grades Overview | ADV-Attendify</title>
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="images/websitelogo.png">
+
+<!-- Supabase Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<style>
+/* (All existing styles unchanged) */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ================= BACKGROUND ================= */
+body{
+    min-height:100vh;
+    overflow-x:hidden;
+    background:url("images/backgroundhome.png") center/cover no-repeat fixed;
+}
+
+/* ================= NAVBAR ================= */
+nav{
+    position:fixed;
+    top:0;
+    width:100%;
+    padding:20px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(0,0,0,0.25);
+    backdrop-filter:blur(8px);
+    z-index:1001;
+}
+
+.menu-btn{
+    font-size:28px;
+    background:none;
+    border:none;
+    color:#6fe3ff;
+    cursor:pointer;
+}
+
+/* ================= PROFILE ICON ================= */
+.profile-wrapper{
+    position:relative;
+}
+
+.profile{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    overflow:hidden;
+    cursor:pointer;
+    border:2px solid #6fe3ff;
+}
+
+.profile img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* ================= PROFILE DROPDOWN ================= */
+.profile-menu{
+    position:absolute;
+    top:55px;
+    right:0;
+    background:#0b2a3a;
+    border-radius:12px;
+    padding:10px 0;
+    min-width:170px;
+    opacity:0;
+    pointer-events:none;
+    transition:0.25s;
+    z-index:1002;
+}
+
+.profile-menu.active{
+    opacity:1;
+    pointer-events:all;
+}
+
+.profile-menu a{
+    display:block;
+    padding:12px 20px;
+    color:#dffaff;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.profile-menu a:hover{
+    background:#1ea7d7;
+    color:#00141c;
+}
+
+/* ================= HERO SECTION ================= */
+.hero{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:120px 40px 40px;
+}
+
+/* ================= MAIN PANEL ================= */
+.main-panel{
+    width:100%;
+    max-width:1400px;
+    padding:35px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(14px);
+    border-radius:26px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+
+/* ================= HEADER ================= */
+.header-section{
+    text-align:center;
+    margin-bottom:30px;
+    color:#fff;
+}
+
+.header-section h1{
+    font-size:2.5rem;
+    color:#6fe3ff;
+    margin-bottom:10px;
+    text-shadow:0 2px 5px rgba(0,0,0,0.3);
+}
+
+.header-section p{
+    font-size:1.1rem;
+    color:#070808;
+}
+
+/* ================= FILTER SECTION ================= */
+.filter-section{
+    background:rgba(11,42,58,0.8);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:30px;
+    border:1px solid rgba(110,243,255,0.3);
+}
+
+.filter-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:20px;
+    align-items:end;
+}
+
+.filter-item{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.filter-item label{
+    color:#6fe3ff;
+    font-weight:500;
+    font-size:0.95rem;
+}
+
+.filter-item select, 
+.filter-item input{
+    background:rgba(0,20,28,0.6);
+    border:1px solid #2c5a6e;
+    border-radius:12px;
+    padding:12px 15px;
+    color:#dffaff;
+    font-size:0.95rem;
+    outline:none;
+    transition:0.2s;
+}
+
+.filter-item select:hover,
+.filter-item input:hover{
+    border-color:#6fe3ff;
+}
+
+.filter-item select:focus,
+.filter-item input:focus{
+    border-color:#6fe3ff;
+    box-shadow:0 0 0 2px rgba(110,243,255,0.2);
+}
+
+.filter-item option{
+    background:#0b2a3a;
+    color:#dffaff;
+}
+
+.search-btn{
+    background:linear-gradient(135deg, #00f2ff, #7f5cff);
+    border:none;
+    border-radius:12px;
+    padding:12px 25px;
+    color:#020617;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+
+.search-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 5px 15px rgba(0,242,255,0.3);
+}
+
+.reset-btn{
+    background:rgba(255,255,255,0.1);
+    border:2px solid #6fe3ff;
+    border-radius:12px;
+    padding:12px 25px;
+    color:#dffaff;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.2s;
+    width:100%;
+}
+
+.reset-btn:hover{
+    background:rgba(110,243,255,0.2);
+}
+
+/* ================= STUDENTS TABLE ================= */
+.table-container{
+    overflow-x:auto;
+    border-radius:16px;
+    background:rgba(0,20,28,0.6);
+    padding:5px;
+}
+
+.students-table{
+    width:100%;
+    border-collapse:collapse;
+    background:rgba(223,250,255,0.1);
+    border-radius:16px;
+    overflow:hidden;
+    min-width:600px;
+}
+
+.students-table th{
+    background:#0b2a3a;
+    color:#6fe3ff;
+    font-weight:600;
+    padding:15px 12px;
+    text-align:left;
+    border-bottom:3px solid #6fe3ff;
+    font-size:0.95rem;
+}
+
+.students-table td{
+    padding:15px 12px;
+    color:#dffaff;
+    border-bottom:1px solid rgba(110,243,255,0.2);
+    font-size:0.95rem;
+}
+
+.students-table tbody tr{
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.students-table tbody tr:hover{
+    background:rgba(110,243,255,0.1);
+}
+
+/* Student avatar */
+.student-avatar{
+    width:35px;
+    height:35px;
+    border-radius:50%;
+    background:linear-gradient(135deg, #00f2ff, #7f5cff);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#020617;
+    font-weight:600;
+    margin-right:10px;
+}
+
+.student-info-cell{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+/* View button (for mobile) */
+.view-grades-btn{
+    background:rgba(110,243,255,0.15);
+    border:1px solid #6fe3ff;
+    border-radius:20px;
+    padding:5px 12px;
+    font-size:0.8rem;
+    color:#6fe3ff;
+    cursor:pointer;
+    transition:0.2s;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+}
+.view-grades-btn:hover{
+    background:#6fe3ff;
+    color:#020617;
+}
+@media (max-width: 768px){
+    .view-grades-btn{
+        padding:4px 10px;
+        font-size:0.7rem;
+    }
+}
+
+/* ================= GRADES MODAL ================= */
+.modal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.8);
+    backdrop-filter:blur(8px);
+    z-index:2000;
+    align-items:center;
+    justify-content:center;
+}
+
+.modal.active{
+    display:flex;
+}
+
+.modal-content{
+    background:#0c2c3a;
+    border-radius:30px;
+    padding:30px;
+    width:90%;
+    max-width:1000px;
+    max-height:85vh;
+    overflow-y:auto;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+    border:2px solid #6fe3ff;
+    box-shadow:0 20px 60px rgba(0,242,255,0.3);
+}
+
+.modal-content::-webkit-scrollbar {
+    display:none;
+}
+
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    padding-bottom:15px;
+    border-bottom:1px solid #2c5a6e;
+}
+
+.modal-header h2{
+    color:#6fe3ff;
+    font-size:1.8rem;
+    font-weight:400;
+}
+
+.close-modal{
+    background:none;
+    border:none;
+    color:#9bbaca;
+    font-size:28px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.close-modal:hover{
+    color:#6fe3ff;
+}
+
+/* Student info card in modal */
+.student-info-card{
+    background:rgba(0,20,28,0.6);
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:20px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:15px;
+}
+
+.info-item{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.info-label{
+    color:#9bbaca;
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+}
+
+.info-value{
+    color:#6fe3ff;
+    font-size:1.2rem;
+    font-weight:600;
+}
+
+/* Modal filter section */
+.modal-filter-section{
+    background:rgba(11,42,58,0.6);
+    border-radius:12px;
+    padding:15px;
+    margin-bottom:20px;
+    border:1px solid rgba(110,243,255,0.2);
+}
+
+.modal-filter-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:15px;
+    align-items:end;
+}
+
+.modal-filter-item{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.modal-filter-item label{
+    color:#6fe3ff;
+    font-size:0.9rem;
+    font-weight:500;
+}
+
+.modal-filter-item select,
+.modal-filter-item input{
+    background:rgba(0,20,28,0.8);
+    border:1px solid #2c5a6e;
+    border-radius:8px;
+    padding:10px 12px;
+    color:#dffaff;
+    font-size:0.95rem;
+    outline:none;
+    transition:0.2s;
+}
+
+.modal-filter-item select:hover,
+.modal-filter-item input:hover{
+    border-color:#6fe3ff;
+}
+
+.modal-filter-item select:focus,
+.modal-filter-item input:focus{
+    border-color:#6fe3ff;
+    box-shadow:0 0 0 2px rgba(110,243,255,0.2);
+}
+
+.modal-reset-btn{
+    background:rgba(255,255,255,0.1);
+    border:1px solid #6fe3ff;
+    border-radius:8px;
+    padding:10px 15px;
+    color:#dffaff;
+    font-weight:500;
+    cursor:pointer;
+    transition:0.2s;
+    height:42px;
+}
+
+.modal-reset-btn:hover{
+    background:rgba(110,243,255,0.2);
+}
+
+/* Grades table in modal */
+.grades-modal-table{
+    width:100%;
+    border-collapse:collapse;
+    background:rgba(0,20,28,0.4);
+    border-radius:12px;
+    overflow:hidden;
+    margin-top:15px;
+}
+
+.grades-modal-table th{
+    background:#0b2a3a;
+    color:#6fe3ff;
+    padding:12px;
+    text-align:left;
+    font-weight:500;
+    border-bottom:2px solid #6fe3ff;
+    position:sticky;
+    top:0;
+}
+
+.grades-modal-table td{
+    padding:12px;
+    color:#dffaff;
+    border-bottom:1px solid #2c5a6e;
+}
+
+.grades-modal-table tbody tr:hover{
+    background:rgba(110,243,255,0.1);
+}
+
+/* Professor badge in modal */
+.prof-badge{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.prof-avatar{
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:linear-gradient(135deg, #00f2ff, #7f5cff);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#020617;
+    font-size:0.8rem;
+    font-weight:600;
+}
+
+/* Grade badges in modal */
+.grade-display{
+    display:inline-block;
+    padding:4px 12px;
+    border-radius:20px;
+    font-weight:600;
+    min-width:60px;
+    text-align:center;
+}
+
+.grade-pass{
+    background:rgba(76,175,80,0.2);
+    color:#81c784;
+    border:1px solid #4caf50;
+}
+
+.grade-fail{
+    background:rgba(244,67,54,0.2);
+    color:#ff8a80;
+    border:1px solid #f44336;
+}
+
+.grade-pending{
+    background:rgba(255,193,7,0.2);
+    color:#ffd740;
+    border:1px solid #ffc107;
+}
+
+/* Last Updated column styles */
+.last-updated-cell {
+    color: #6fe3ff;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.last-updated-cell.never {
+    color: #9bbaca;
+    font-style: italic;
+}
+
+/* Filter badge */
+.filter-badge{
+    display:inline-block;
+    background:rgba(110,243,255,0.15);
+    color:#6fe3ff;
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:0.85rem;
+    margin-left:10px;
+}
+
+.empty-state{
+    text-align:center;
+    padding:40px 20px;
+    color:#9bbaca;
+}
+
+.empty-state i{
+    font-size:3rem;
+    margin-bottom:15px;
+    display:block;
+    opacity:0.5;
+}
+
+/* Double-click hint */
+.dbl-hint{
+    text-align:center;
+    color:#9bbaca;
+    font-size:0.9rem;
+    margin-top:20px;
+    font-style:italic;
+}
+
+.dbl-hint i{
+    margin-right:5px;
+}
+
+/* Edit grade row styles */
+.grade-edit-input{
+    background:rgba(0,20,28,0.9);
+    border:1px solid #6fe3ff;
+    border-radius:8px;
+    padding:6px 10px;
+    width:90px;
+    color:#dffaff;
+    font-weight:500;
+    text-align:center;
+}
+.edit-action-btn{
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    color:#6fe3ff;
+    font-size:1.1rem;
+    margin:0 4px;
+    transition:0.2s;
+}
+.edit-action-btn:hover{
+    transform:scale(1.1);
+    color:#00f2ff;
+}
+.save-action-btn{
+    color:#4caf50;
+}
+.cancel-action-btn{
+    color:#ff7b7b;
+}
+.edit-action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.edit-action-btn:disabled:hover {
+    transform: none;
+    color: #6fe3ff;
+}
+
+/* Archived badge */
+.archived-badge {
+    background: #ffc107;
+    color: #000;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-left: 6px;
+    font-weight: normal;
+    text-transform: none;
+}
+
+/* Custom SweetAlert2 styling */
+.swal2-popup {
+    background: #0b2a3a !important;
+    border-radius: 22px !important;
+    border: 1px solid rgba(110, 243, 255, 0.25) !important;
+}
+
+.swal2-title {
+    color: #6ef3ff !important;
+}
+
+.swal2-html-container {
+    color: #dffaff !important;
+}
+
+.swal2-confirm {
+    background: linear-gradient(135deg, #00f2ff, #7f5cff) !important;
+    color: #020617 !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+}
+
+.swal2-cancel {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #dffaff !important;
+    border: 2px solid #6ef3ff !important;
+    border-radius: 12px !important;
+}
+
+#sidebarContainer {
+    position: relative;
+    z-index: 1002;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: #6fe3ff;
+    font-size: 1.2rem;
+}
+
+.loading-spinner::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 20px auto;
+    border: 4px solid #6fe3ff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}
+
+/* ================= MOBILE VIEW (ORIGINAL) ================= */
+@media (max-width: 1024px) { nav { padding: 18px 30px; } }
+@media (max-width: 768px)  { nav { padding: 15px 20px; } }
+@media (max-width: 600px)  { nav { padding: 12px 15px; } }
+@media (max-width: 480px)  { nav { padding: 10px 12px; } }
+
+@media (max-width: 1024px) { .menu-btn { font-size: 26px; } }
+@media (max-width: 768px)  { .menu-btn { font-size: 24px; } }
+@media (max-width: 600px)  { .menu-btn { font-size: 22px; } }
+@media (max-width: 480px)  { .menu-btn { font-size: 20px; } }
+
+@media (max-width: 1024px) { .profile { width: 38px; height: 38px; } }
+@media (max-width: 768px)  { .profile { width: 35px; height: 35px; } }
+@media (max-width: 600px)  { .profile { width: 32px; height: 32px; } }
+@media (max-width: 480px)  { .profile { width: 30px; height: 30px; border-width: 1.5px; } }
+
+@media (max-width: 768px)  { .profile-menu { top: 48px; min-width: 150px; } }
+@media (max-width: 600px)  { .profile-menu { top: 45px; min-width: 140px; } }
+@media (max-width: 480px)  { .profile-menu { top: 42px; min-width: 130px; } }
+@media (max-width: 768px)  { .profile-menu a { padding: 10px 18px; font-size: 13px; } }
+@media (max-width: 600px)  { .profile-menu a { padding: 9px 16px; font-size: 12.5px; } }
+@media (max-width: 480px)  { .profile-menu a { padding: 8px 14px; font-size: 12px; } }
+
+@media (max-width: 1024px) { .hero { padding: 100px 30px 30px; } }
+@media (max-width: 768px)  { .hero { padding: 80px 20px 20px; } }
+@media (max-width: 600px)  { .hero { padding: 70px 15px 15px; } }
+@media (max-width: 480px)  { .hero { padding: 60px 12px 12px; } }
+
+@media (max-width: 1024px) { .main-panel { padding: 25px; border-radius: 24px; } }
+@media (max-width: 768px)  { .main-panel { padding: 20px; border-radius: 20px; } }
+@media (max-width: 600px)  { .main-panel { padding: 16px; border-radius: 18px; } }
+@media (max-width: 480px)  { .main-panel { padding: 14px; border-radius: 16px; } }
+
+@media (max-width: 768px) { .header-section { margin-bottom: 20px; } }
+@media (max-width: 768px) { .header-section h1 { font-size: 1.8rem; } }
+@media (max-width: 600px) { .header-section h1 { font-size: 1.5rem; } }
+@media (max-width: 480px) { .header-section h1 { font-size: 1.3rem; } }
+@media (max-width: 768px) { .header-section p { font-size: 0.95rem; } }
+@media (max-width: 600px) { .header-section p { font-size: 0.85rem; } }
+
+@media (max-width: 768px) { .filter-section { padding: 16px; margin-bottom: 20px; border-radius: 16px; } }
+@media (max-width: 600px) { .filter-section { padding: 14px; margin-bottom: 18px; border-radius: 14px; } }
+@media (max-width: 640px) { .filter-grid { grid-template-columns: 1fr; gap: 15px; } }
+@media (max-width: 768px) { .filter-grid { gap: 15px; } }
+
+@media (max-width: 768px) { 
+    .filter-item label { font-size: 0.85rem; }
+    .filter-item select, .filter-item input { padding: 10px 12px; font-size: 0.9rem; border-radius: 10px; }
+}
+@media (max-width: 600px) { 
+    .filter-item select, .filter-item input { padding: 9px 10px; font-size: 0.85rem; }
+}
+
+@media (max-width: 768px) { .reset-btn { padding: 10px 20px; font-size: 0.9rem; } }
+@media (max-width: 600px) { .reset-btn { padding: 9px 16px; font-size: 0.85rem; } }
+
+@media (max-width: 768px) {
+    .table-container { border-radius: 14px; padding: 4px; }
+    .students-table { min-width: 500px; }
+    .students-table th { padding: 12px 8px; font-size: 0.85rem; }
+    .students-table td { padding: 12px 8px; font-size: 0.85rem; }
+}
+@media (max-width: 600px) {
+    .students-table { min-width: 420px; font-size: 0.8rem; }
+    .students-table th { padding: 10px 6px; font-size: 0.8rem; }
+    .students-table td { padding: 10px 6px; font-size: 0.8rem; }
+}
+@media (max-width: 480px) {
+    .students-table { min-width: 380px; }
+    .students-table th { padding: 8px 5px; font-size: 0.75rem; }
+    .students-table td { padding: 8px 5px; font-size: 0.75rem; }
+}
+
+@media (max-width: 768px) { .student-avatar { width: 30px; height: 30px; font-size: 0.75rem; margin-right: 8px; } }
+@media (max-width: 600px) { .student-avatar { width: 28px; height: 28px; font-size: 0.7rem; } }
+
+@media (max-width: 768px) { .dbl-hint { font-size: 0.8rem; margin-top: 15px; } }
+@media (max-width: 600px) { .dbl-hint { font-size: 0.75rem; } }
+
+@media (max-width: 768px) {
+    .modal-content { padding: 20px; border-radius: 24px; width: 95%; max-height: 90vh; }
+    .modal-header h2 { font-size: 1.4rem; }
+    .close-modal { font-size: 24px; }
+}
+@media (max-width: 600px) {
+    .modal-content { padding: 16px; border-radius: 20px; }
+    .modal-header { margin-bottom: 12px; padding-bottom: 10px; }
+    .modal-header h2 { font-size: 1.2rem; }
+}
+
+@media (max-width: 640px) {
+    .student-info-card { grid-template-columns: 1fr; gap: 10px; padding: 15px; }
+}
+@media (max-width: 768px) {
+    .info-label { font-size: 0.75rem; }
+    .info-value { font-size: 1rem; }
+}
+@media (max-width: 600px) {
+    .info-value { font-size: 0.9rem; }
+}
+
+@media (max-width: 768px) {
+    .modal-filter-section { padding: 12px; margin-bottom: 15px; border-radius: 10px; }
+}
+@media (max-width: 640px) {
+    .modal-filter-grid { grid-template-columns: 1fr; gap: 12px; }
+}
+@media (max-width: 768px) {
+    .modal-filter-item label { font-size: 0.8rem; }
+    .modal-filter-item select, .modal-filter-item input { padding: 8px 10px; font-size: 0.85rem; border-radius: 8px; }
+    .modal-reset-btn { padding: 8px 12px; font-size: 0.85rem; height: 38px; }
+}
+
+@media (max-width: 768px) {
+    .grades-modal-table th { padding: 10px 8px; font-size: 0.8rem; }
+    .grades-modal-table td { padding: 10px 8px; font-size: 0.8rem; }
+}
+@media (max-width: 600px) {
+    .grades-modal-table { min-width: 500px; }
+    .grades-modal-table th { padding: 8px 6px; font-size: 0.75rem; }
+    .grades-modal-table td { padding: 8px 6px; font-size: 0.75rem; }
+}
+@media (max-width: 480px) {
+    .grades-modal-table { min-width: 460px; }
+}
+
+@media (max-width: 768px) {
+    .grade-display { padding: 3px 8px; min-width: 50px; font-size: 0.75rem; }
+}
+@media (max-width: 600px) {
+    .grade-display { padding: 2px 6px; min-width: 45px; font-size: 0.7rem; }
+}
+
+@media (max-width: 768px) {
+    .filter-badge { font-size: 0.75rem; padding: 3px 8px; }
+}
+
+@media (max-width: 768px) {
+    .prof-badge { gap: 5px; }
+    .prof-avatar { width: 24px; height: 24px; font-size: 0.7rem; }
+}
+
+@media (max-width: 768px) {
+    .empty-state { padding: 30px 15px; }
+    .empty-state i { font-size: 2.5rem; }
+}
+@media (max-width: 600px) {
+    .empty-state { padding: 25px 12px; }
+    .empty-state i { font-size: 2rem; }
+    .empty-state p { font-size: 0.85rem; }
+}
+
+@media (max-width: 768px) {
+    .loading-spinner { padding: 30px; font-size: 1rem; }
+    .loading-spinner::after { width: 35px; height: 35px; }
+}
+@media (max-width: 600px) {
+    .loading-spinner { padding: 25px; font-size: 0.9rem; }
+    .loading-spinner::after { width: 30px; height: 30px; margin: 15px auto; }
+}
+
+@media (max-width: 768px) {
+    .last-updated-cell { font-size: 0.75rem; }
+}
+@media (max-width: 600px) {
+    .last-updated-cell { font-size: 0.7rem; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== LOAD SIDEBAR HERE ===== -->
+<div id="sidebarContainer"></div>
+
+<!-- Navbar -->
+<nav>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+    <div class="profile-wrapper">
+        <div class="profile" onclick="toggleProfileMenu()">
+            <img src="images/profile.png" id="navProfileImage">
+        </div>
+
+        <div id="profileMenu" class="profile-menu">
+            <a href="admin_profile.html">Edit Profile</a>
+            <a onclick="confirmLogout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<section class="hero">
+    <div class="main-panel">
+        
+        <!-- Header -->
+        <div class="header-section">
+            <h1>Student Grades Overview</h1>
+            <p>View and edit student grades (including archived subjects)</p>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-grid">
+                <div class="filter-item">
+                    <label>Filter by Year Level</label>
+                    <select id="yearFilter" onchange="applyFilters()">
+                        <option value="all">All Years</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Filter by Section</label>
+                    <select id="sectionFilter" onchange="applyFilters()">
+                        <option value="all">All Sections</option>
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                        <option value="D">Section D</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Search Student</label>
+                    <input type="text" id="studentSearch" placeholder="Enter student name..." onkeyup="applyFilters()">
+                </div>
+                <div class="filter-item">
+                    <button class="reset-btn" onclick="resetFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="table-container">
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Year & Section</th>
+                        <th>ID Number</th>
+                        <th>Subjects Enrolled</th>
+                        <th style="width:100px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsTableBody">
+                    <tr><td colspan="5"><div class="loading-spinner">Loading students from database...</div></td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Double-click hint -->
+        <div class="dbl-hint">
+            <i class="fas fa-mouse-pointer"></i> Double-click on a student row or click <i class="fas fa-eye"></i> to view/edit grades
+        </div>
+
+    </div>
+</section>
+
+<!-- Student Grades Modal (with Edit functionality, Last Updated column, and Archived subjects) -->
+<div id="gradesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Student Grades <span style="font-size:0.9rem;">(Click <i class="fas fa-pen"></i> to edit - Admins can edit all grades)</span></h2>
+            <button class="close-modal" onclick="closeGradesModal()">&times;</button>
+        </div>
+        
+        <!-- Student Info -->
+        <div class="student-info-card" id="modalStudentInfo">
+            <div class="info-item"><span class="info-label">Student Name</span><span class="info-value" id="modalStudentName">-</span></div>
+            <div class="info-item"><span class="info-label">ID Number</span><span class="info-value" id="modalStudentId">-</span></div>
+            <div class="info-item"><span class="info-label">Year & Section</span><span class="info-value" id="modalStudentYearSection">-</span></div>
+        </div>
+        
+        <!-- Modal Filter Section -->
+        <div class="modal-filter-section">
+            <div class="modal-filter-grid">
+                <div class="modal-filter-item">
+                    <label>Filter by Status</label>
+                    <select id="modalStatusFilter" onchange="applyModalFilters()">
+                        <option value="all">All Grades</option>
+                        <option value="passed">Passed (≥75)</option>
+                        <option value="failed">Failed (<75)</option>
+                        <option value="pending">Not Yet Graded</option>
+                    </select>
+                </div>
+                <div class="modal-filter-item">
+                    <label>Search Subject</label>
+                    <input type="text" id="modalSubjectSearch" placeholder="Subject name/code..." onkeyup="applyModalFilters()">
+                </div>
+                <div class="modal-filter-item">
+                    <button class="modal-reset-btn" onclick="resetModalFilters()"><i class="fas fa-redo-alt"></i> Reset</button>
+                </div>
+            </div>
+            <div style="margin-top: 10px; text-align: right;">
+                <span class="filter-badge" id="modalResultsCount">Showing all subjects</span>
+            </div>
+        </div>
+        
+        <!-- Grades Table (with edit actions, Last Updated column, and Archived indicator) -->
+        <div style="overflow-x: auto;">
+            <table class="grades-modal-table">
+                <thead>
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Professor</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                        <th style="width:80px;">Actions</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody id="modalGradesBody">
+                    <tr><td colspan="7" class="empty-state"><i>📚</i><p>No grades available for this student</p></td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: right;">
+            <button class="reset-btn" onclick="closeGradesModal()" style="width: auto; padding: 10px 25px;">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // ---------- SUPABASE INITIALIZATION ----------
+    const { createClient } = supabase;
+    const supabaseClient = createClient(
+        "https://tmyrnjdwaayelrctqppg.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteXJuamR3YWF5ZWxyY3RxcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDgzODEsImV4cCI6MjA4Njg4NDM4MX0.w_DhdLWk4gA-x434kSobbXjG83IXHpakhRsaig-zMpw"
+    );
+
+    // Global data stores
+    let allStudents = [];
+    let allEnrollments = [];
+    let allSubjects = [];
+    let allProfessors = [];
+    let allListOfSubs = []; // from list_of_subs table for subject codes
+
+    let currentFilters = { year: 'all', section: 'all', student: '' };
+    let modalFilters = { status: 'all', search: '' };
+    let selectedStudent = null;
+    let currentStudentGrades = []; // Combined array of active enrollments + mirror records
+
+    // Helper function to format date and time for display
+    function formatDateTime(timestamp) {
+        if (!timestamp) return '<span class="last-updated-cell never">—</span>';
+        
+        const date = new Date(timestamp);
+        
+        // Format: MM/DD/YYYY, HH:MM AM/PM
+        const formatted = date.toLocaleDateString('en-US', {
+            month: 'numeric',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        return `<span class="last-updated-cell">${formatted}</span>`;
+    }
+
+    // ---- Sidebar & Profile ----
+    fetch("admin_sidebar.html").then(r => r.text()).then(html => {
+        document.getElementById("sidebarContainer").innerHTML = html;
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        if(sidebar && overlay) {
+            window.toggleMenu = () => { sidebar.classList.toggle("active"); overlay.classList.toggle("active"); };
+            overlay.onclick = toggleMenu;
+        }
+    });
+
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#00f2ff',
+            cancelButtonColor: '#ff6b6b',
+            confirmButtonText: 'Yes, logout',
+            background: '#0b2a3a', color: '#dffaff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.clear();
+                Swal.fire({ title: 'Logged Out!', text: 'Successfully logged out.', icon: 'success', confirmButtonColor: '#00f2ff', background: '#0b2a3a', color: '#dffaff' })
+                .then(() => window.location.href = 'index.html');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedImage = localStorage.getItem('profileImage');
+        if (savedImage) document.getElementById('navProfileImage').src = savedImage;
+        initializeDashboard();
+    });
+
+    function toggleProfileMenu() {
+        document.getElementById("profileMenu").classList.toggle("active");
+    }
+    document.addEventListener("click", (e) => {
+        const profile = document.querySelector(".profile");
+        const menu = document.getElementById("profileMenu");
+        if(profile && menu && !profile.contains(e.target) && !menu.contains(e.target)) menu.classList.remove("active");
+    });
+
+    // ---- Data loading ----
+    async function initializeDashboard() {
+        await loadDataFromDatabase();
+        renderStudentsTable();
+    }
+
+    async function loadDataFromDatabase() {
+        try {
+            document.getElementById('studentsTableBody').innerHTML = `<tr><td colspan="5"><div class="loading-spinner">Loading students...</div></td></tr>`;
+            const { data: students } = await supabaseClient.from('student').select('*').order('lname');
+            const { data: enrollments } = await supabaseClient.from('enrollment_sub').select('*');
+            const { data: subjects } = await supabaseClient.from('subjects').select('*');
+            const { data: professors } = await supabaseClient.from('professor').select('uid, fname, lname');
+            const { data: listOfSubs } = await supabaseClient.from('list_of_subs').select('*');
+            
+            allStudents = students || [];
+            allEnrollments = enrollments || [];
+            allSubjects = subjects || [];
+            allProfessors = professors || [];
+            allListOfSubs = listOfSubs || [];
+        } catch(error) {
+            console.error(error);
+            Swal.fire({ title: 'Error', text: 'Failed to load data.', icon: 'error', background: '#0b2a3a', color: '#dffaff' });
+        }
+    }
+
+    function getProfessorName(pid) { const p = allProfessors.find(prof => prof.uid === pid); return p ? `${p.fname || ''} ${p.lname || ''}`.trim() || 'Unknown' : 'Unknown'; }
+    function getProfessorInitials(pid) { const p = allProfessors.find(prof => prof.uid === pid); if(p) return ((p.fname?p.fname.charAt(0):'') + (p.lname?p.lname.charAt(0):'')) || 'P'; return 'P'; }
+    function getStudentEnrollmentCount(sid) { return allEnrollments.filter(e => e.stud_id === sid).length; }
+
+    // Fetch subject code from list_of_subs by name
+    function getSubjectCodeFromList(subjectName) {
+        const sub = allListOfSubs.find(s => s.subject === subjectName);
+        return sub ? sub.code : 'N/A';
+    }
+
+    // New function: Fetch combined grades for a student (active enrollments + subject_mirror)
+    async function fetchStudentGradesWithMirror(studentId) {
+        try {
+            // 1. Fetch active enrollments
+            const { data: activeEnrolls, error: activeErr } = await supabaseClient
+                .from('enrollment_sub')
+                .select('*')
+                .eq('stud_id', studentId);
+            if (activeErr) throw activeErr;
+
+            // 2. Fetch mirror records
+            const { data: mirrorRecords, error: mirrorErr } = await supabaseClient
+                .from('subject_mirror')
+                .select('*')
+                .eq('student_id', studentId);
+            if (mirrorErr) throw mirrorErr;
+
+            const combined = [];
+            
+            // Process active enrollments first
+            for (const enr of (activeEnrolls || [])) {
+                const subject = allSubjects.find(s => s.id === enr.sub_id);
+                if (!subject) continue;
+                combined.push({
+                    enroll_id: enr.enroll_id,
+                    subject_code: subject.sub_code || 'N/A',
+                    subject_name: subject.sub || 'Unknown Subject',
+                    professor_id: subject.prof_id,
+                    grade: enr.grades,
+                    date_time: enr.date_time,
+                    isArchived: false,
+                    academic_term: subject.academic_term
+                });
+            }
+
+            // Process mirror records (only if not already present as active enrollment)
+            for (const rec of (mirrorRecords || [])) {
+                // Check if there's an active enrollment for the same subject name in the same term?
+                // For simplicity, we'll treat mirror records as separate if no active match by subject name and academic term.
+                const activeExists = combined.some(item => 
+                    item.subject_name === rec.subject && 
+                    item.academic_term === rec.academic_term &&
+                    !item.isArchived
+                );
+                if (!activeExists) {
+                    const code = getSubjectCodeFromList(rec.subject);
+                    combined.push({
+                        enroll_id: `mirror-${rec.id}`,
+                        subject_code: code,
+                        subject_name: rec.subject,
+                        professor_id: rec.professor_id,
+                        grade: rec.grade,
+                        date_time: null, // mirror table may not have timestamp
+                        isArchived: true,
+                        academic_term: rec.academic_term
+                    });
+                }
+            }
+
+            return combined;
+        } catch (error) {
+            console.error('Error fetching student grades with mirror:', error);
+            return [];
+        }
+    }
+
+    window.applyFilters = function() {
+        currentFilters.year = document.getElementById('yearFilter').value;
+        currentFilters.section = document.getElementById('sectionFilter').value;
+        currentFilters.student = document.getElementById('studentSearch').value.toLowerCase();
+        renderStudentsTable();
+    };
+    window.resetFilters = function() {
+        document.getElementById('yearFilter').value = 'all';
+        document.getElementById('sectionFilter').value = 'all';
+        document.getElementById('studentSearch').value = '';
+        currentFilters = { year: 'all', section: 'all', student: '' };
+        renderStudentsTable();
+    };
+
+    // Helper to open grades modal (updated to use mirror)
+    async function openGradesForStudent(studentId) {
+        const student = allStudents.find(s => s.id === studentId);
+        if(!student) return;
+        selectedStudent = student;
+        
+        // Fetch combined grades
+        currentStudentGrades = await fetchStudentGradesWithMirror(studentId);
+        
+        const fullName = `${student.fname||''} ${student.lname||''}`.trim() || 'Unknown';
+        const ys = student['year-section'] || 'N/A';
+        const formattedYS = ys !== 'N/A' ? `Year ${ys.charAt(0)} · Section ${ys.charAt(1)}` : 'N/A';
+        document.getElementById('modalStudentName').innerText = fullName;
+        document.getElementById('modalStudentId').innerText = student.id || 'N/A';
+        document.getElementById('modalStudentYearSection').innerText = formattedYS;
+        resetModalFilters();
+        document.getElementById('gradesModal').classList.add('active');
+    }
+
+    function renderStudentsTable() {
+        const tbody = document.getElementById('studentsTableBody');
+        let filtered = allStudents.filter(s => {
+            if(currentFilters.year !== 'all') {
+                const ys = s['year-section'] || '';
+                if(ys.charAt(0) !== currentFilters.year) return false;
+            }
+            if(currentFilters.section !== 'all') {
+                const ys = s['year-section'] || '';
+                if(ys.length > 1 && ys.charAt(1) !== currentFilters.section) return false;
+                else if(ys.length <= 1) return false;
+            }
+            if(currentFilters.student) {
+                const full = `${s.fname||''} ${s.lname||''}`.toLowerCase();
+                const id = (s.id||'').toLowerCase();
+                if(!full.includes(currentFilters.student) && !id.includes(currentFilters.student)) return false;
+            }
+            return true;
+        });
+        if(filtered.length === 0) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i>👥</i><h3>No students found</h3></div></td></tr>`; return; }
+        tbody.innerHTML = '';
+        filtered.forEach(s => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-student-id', s.id);
+            row.ondblclick = () => openGradesForStudent(s.id);
+            const initials = ((s.fname||'').charAt(0) + (s.lname||'').charAt(0)).toUpperCase() || 'ST';
+            const fullName = `${s.fname||''} ${s.lname||''}`.trim() || 'Unknown';
+            const ys = s['year-section'] || 'N/A';
+            const formattedYS = ys !== 'N/A' ? `Year ${ys.charAt(0)} · Section ${ys.charAt(1)}` : 'N/A';
+            const cnt = getStudentEnrollmentCount(s.id);
+            row.innerHTML = `
+                <td><div class="student-info-cell"><div class="student-avatar">${initials}</div>${fullName}</div></td>
+                <td>${formattedYS}</td>
+                <td>${s.id||'N/A'}</td>
+                <td>${cnt} subject${cnt!==1?'s':''}</td>
+                <td><button class="view-grades-btn" onclick="event.stopPropagation(); openGradesForStudent('${s.id}')"><i class="fas fa-eye"></i> Grades</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // ---- Modal grade editing logic ----
+    window.closeGradesModal = function() {
+        document.getElementById('gradesModal').classList.remove('active');
+        selectedStudent = null;
+        currentStudentGrades = [];
+    };
+
+    window.applyModalFilters = function() {
+        modalFilters.status = document.getElementById('modalStatusFilter').value;
+        modalFilters.search = document.getElementById('modalSubjectSearch').value.toLowerCase();
+        renderModalGrades();
+    };
+    window.resetModalFilters = function() {
+        document.getElementById('modalStatusFilter').value = 'all';
+        document.getElementById('modalSubjectSearch').value = '';
+        modalFilters = { status: 'all', search: '' };
+        renderModalGrades();
+    };
+
+    function renderModalGrades() {
+        const tbody = document.getElementById('modalGradesBody');
+        if(!selectedStudent || currentStudentGrades.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i>📚</i><p>No grades available for this student</p></td></tr>`;
+            document.getElementById('modalResultsCount').innerText = 'No subjects found';
+            return;
+        }
+        
+        let filtered = currentStudentGrades.filter(item => {
+            const grade = item.grade;
+            const num = parseFloat(grade);
+            if(modalFilters.status !== 'all') {
+                if(modalFilters.status === 'passed' && (isNaN(num) || num < 75)) return false;
+                if(modalFilters.status === 'failed' && (grade===null || grade===undefined || num >= 75)) return false;
+                if(modalFilters.status === 'pending' && (grade!==null && grade!==undefined)) return false;
+            }
+            if(modalFilters.search) {
+                const nameMatch = item.subject_name.toLowerCase().includes(modalFilters.search);
+                const codeMatch = item.subject_code.toLowerCase().includes(modalFilters.search);
+                if(!nameMatch && !codeMatch) return false;
+            }
+            return true;
+        });
+
+        document.getElementById('modalResultsCount').innerText = `Showing ${filtered.length} of ${currentStudentGrades.length} subjects`;
+        if(filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><i>🔍</i><p>No subjects match filters</p></td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        filtered.forEach(item => {
+            const grade = item.grade;
+            const num = parseFloat(grade);
+            let gradeClass = 'grade-pending', statusText = 'Pending';
+            if(grade !== null && grade !== undefined && !isNaN(num)) {
+                if(num >= 75) { gradeClass = 'grade-pass'; statusText = 'Passed'; }
+                else { gradeClass = 'grade-fail'; statusText = 'Failed'; }
+            }
+            const profName = getProfessorName(item.professor_id);
+            const profInitials = getProfessorInitials(item.professor_id);
+            const lastUpdatedHtml = item.isArchived 
+                ? '<span class="last-updated-cell never">Archived</span>' 
+                : formatDateTime(item.date_time);
+            
+            const row = document.createElement('tr');
+            row.setAttribute('data-enrollment-id', item.enroll_id);
+            row.innerHTML = `
+                <td>${item.subject_code}</td>
+                <td>${item.subject_name} ${item.isArchived ? '<span class="archived-badge">Archived</span>' : ''}</td>
+                <td><div class="prof-badge"><div class="prof-avatar">${profInitials}</div>${profName}</div></td>
+                <td class="grade-cell" data-original-grade="${grade !== undefined && grade !== null ? grade : ''}">
+                    <span class="grade-display ${gradeClass}">${grade !== null && grade !== undefined ? grade : '—'}</span>
+                </td>
+                <td class="status-cell"><span class="grade-display ${gradeClass}">${statusText}</span></td>
+                <td class="action-cell">
+                    <button class="edit-action-btn" onclick="editGradeRow(this)" title="Edit grade"><i class="fas fa-pen"></i></button>
+                </td>
+                <td class="last-updated-cell" id="updated-${item.enroll_id}">${lastUpdatedHtml}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    window.editGradeRow = function(btn) {
+        const row = btn.closest('tr');
+        const enrollmentId = row.getAttribute('data-enrollment-id');
+        const isMirror = enrollmentId && enrollmentId.startsWith('mirror-');
+        
+        if(row.querySelector('.grade-edit-input')) return;
+        const gradeCell = row.querySelector('.grade-cell');
+        const originalGradeSpan = gradeCell.querySelector('.grade-display');
+        const currentGrade = originalGradeSpan.innerText === '—' ? '' : originalGradeSpan.innerText;
+        const actionCell = row.querySelector('.action-cell');
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = '0.01';
+        input.min = '0';
+        input.max = '100';
+        input.value = currentGrade;
+        input.classList.add('grade-edit-input');
+        const saveBtn = document.createElement('button');
+        saveBtn.innerHTML = '<i class="fas fa-save"></i>';
+        saveBtn.classList.add('edit-action-btn', 'save-action-btn');
+        saveBtn.title = 'Save grade';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+        cancelBtn.classList.add('edit-action-btn', 'cancel-action-btn');
+        cancelBtn.title = 'Cancel';
+        actionCell.innerHTML = '';
+        actionCell.appendChild(saveBtn);
+        actionCell.appendChild(cancelBtn);
+        gradeCell.innerHTML = '';
+        gradeCell.appendChild(input);
+        input.focus();
+        
+        saveBtn.onclick = async () => {
+            let newGrade = input.value.trim();
+            if(newGrade === '') newGrade = null;
+            else {
+                const num = parseFloat(newGrade);
+                if(isNaN(num)) {
+                    Swal.fire({title:'Invalid',text:'Please enter a valid number',icon:'error',background:'#0b2a3a'});
+                    return;
+                }
+                if(num < 0 || num > 100) {
+                    Swal.fire({title:'Out of range',text:'Grade must be between 0 and 100',icon:'error',background:'#0b2a3a'});
+                    return;
+                }
+                newGrade = num;
+            }
+            
+            try {
+                if (isMirror) {
+                    // Extract the actual mirror record ID (numeric part after "mirror-")
+                    const mirrorId = parseInt(enrollmentId.replace('mirror-', ''));
+                    const { error } = await supabaseClient
+                        .from('subject_mirror')
+                        .update({ grade: newGrade })
+                        .eq('id', mirrorId);
+                    if (error) throw error;
+                    
+                    // Update local data
+                    const target = currentStudentGrades.find(g => g.enroll_id === enrollmentId);
+                    if (target) {
+                        target.grade = newGrade;
+                    }
+                } else {
+                    // Active enrollment
+                    const now = new Date().toISOString();
+                    const { error } = await supabaseClient
+                        .from('enrollment_sub')
+                        .update({ 
+                            grades: newGrade,
+                            date_time: now
+                        })
+                        .eq('enroll_id', enrollmentId);
+                    if(error) throw error;
+                    
+                    // Update local data
+                    const target = currentStudentGrades.find(g => g.enroll_id == enrollmentId);
+                    if(target) {
+                        target.grade = newGrade;
+                        target.date_time = now;
+                    }
+                    const globalEnr = allEnrollments.find(e => e.enroll_id == enrollmentId);
+                    if(globalEnr) {
+                        globalEnr.grades = newGrade;
+                        globalEnr.date_time = now;
+                    }
+                }
+                
+                renderModalGrades();
+                Swal.fire({title:'Updated',text:'Grade saved successfully',icon:'success',timer:1500,showConfirmButton:false,background:'#0b2a3a'});
+            } catch(err) {
+                console.error(err);
+                Swal.fire({title:'Error',text:'Failed to update grade',icon:'error',background:'#0b2a3a'});
+                renderModalGrades();
+            }
+        };
+        cancelBtn.onclick = () => { renderModalGrades(); };
+    };
+
+    document.addEventListener('click', (e) => {
+        if(e.target === document.getElementById('gradesModal')) closeGradesModal();
+    });
+
+    setInterval(async () => {
+        await loadDataFromDatabase();
+        renderStudentsTable();
+        if(selectedStudent && document.getElementById('gradesModal').classList.contains('active')) {
+            currentStudentGrades = await fetchStudentGradesWithMirror(selectedStudent.id);
+            renderModalGrades();
+        }
+    }, 60000);
+</script>
+</body>
+</html>

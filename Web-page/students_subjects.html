@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
+    <title>Students Subject | ADV-Attendify</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/websitelogo.png">
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: url("images/backgroundhome.png") center/cover no-repeat fixed;
+        }
+
+        /* ===== OFFLINE BANNER ===== */
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ff6b6b;
+            color: white;
+            text-align: center;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid #ff8a8a;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .offline-banner i { margin-right: 8px; }
+
+        .offline-banner button {
+            background: white;
+            color: #ff6b6b;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-left: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .offline-banner button:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        /* Responsive adjustments for banner */
+        @media (max-width: 768px) {
+            .offline-banner {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
+        @media (max-width: 480px) {
+            .offline-banner {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(8px);
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 1024px) { nav { padding: 18px 30px; } }
+        @media (max-width: 768px) { nav { padding: 15px 20px; } }
+        @media (max-width: 600px) { nav { padding: 12px 15px; } }
+        @media (max-width: 480px) { nav { padding: 10px 12px; } }
+        @media (max-width: 360px) { nav { padding: 8px 10px; } }
+
+        .menu-btn {
+            font-size: 28px;
+            background: none;
+            border: none;
+            color: #6fe3ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .menu-btn { font-size: 26px; } }
+        @media (max-width: 768px) { .menu-btn { font-size: 24px; } }
+        @media (max-width: 600px) { .menu-btn { font-size: 22px; } }
+        @media (max-width: 480px) { .menu-btn { font-size: 20px; } }
+        @media (max-width: 360px) { .menu-btn { font-size: 18px; } }
+
+        .profile-wrapper { position: relative; }
+
+        .profile {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid #6fe3ff;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .profile { width: 38px; height: 38px; } }
+        @media (max-width: 768px) { .profile { width: 35px; height: 35px; } }
+        @media (max-width: 600px) { .profile { width: 32px; height: 32px; } }
+        @media (max-width: 480px) { .profile { width: 30px; height: 30px; border-width: 1.5px; } }
+        @media (max-width: 360px) { .profile { width: 28px; height: 28px; } }
+
+        .profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-menu {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: #0b2a3a;
+            border-radius: 12px;
+            padding: 10px 0;
+            min-width: 170px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.25s;
+            z-index: 1002;
+        }
+        @media (max-width: 768px) { .profile-menu { top: 48px; min-width: 150px; } }
+        @media (max-width: 600px) { .profile-menu { top: 45px; min-width: 140px; } }
+        @media (max-width: 480px) { .profile-menu { top: 42px; min-width: 130px; } }
+        @media (max-width: 360px) { .profile-menu { top: 38px; min-width: 120px; } }
+
+        .profile-menu.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .profile-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: #dffaff;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        @media (max-width: 768px) { .profile-menu a { padding: 10px 18px; font-size: 13px; } }
+        @media (max-width: 600px) { .profile-menu a { padding: 9px 16px; font-size: 12.5px; } }
+        @media (max-width: 480px) { .profile-menu a { padding: 8px 14px; font-size: 12px; } }
+
+        .profile-menu a:hover {
+            background: #1ea7d7;
+            color: #00141c;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            width: 260px;
+            height: 100%;
+            background: rgba(10, 30, 40, 0.95);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid #2c5a6e;
+            padding: 30px 20px;
+            transition: left 0.3s ease;
+            z-index: 2000;
+            color: #e0f0f5;
+            overflow-y: auto;
+        }
+        @media (max-width: 1024px) { .sidebar { width: 240px; left: -240px; } }
+        @media (max-width: 768px) { .sidebar { width: 220px; left: -220px; padding: 25px 15px; } }
+        @media (max-width: 600px) { .sidebar { width: 200px; left: -200px; padding: 20px 12px; } }
+        @media (max-width: 480px) { .sidebar { width: 100%; left: -100%; border-radius: 0; padding: 20px; } }
+
+        .sidebar.active { left: 0; }
+
+        .sidebar .close-btn {
+            background: none;
+            border: none;
+            color: #6fe3ff;
+            font-size: 28px;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) { .sidebar .close-btn { font-size: 26px; margin-bottom: 25px; } }
+        @media (max-width: 600px) { .sidebar .close-btn { font-size: 24px; margin-bottom: 20px; } }
+
+        .sidebar ul { list-style: none; }
+        .sidebar ul li { margin: 25px 0; }
+        @media (max-width: 768px) { .sidebar ul li { margin: 20px 0; } }
+        @media (max-width: 600px) { .sidebar ul li { margin: 18px 0; } }
+
+        .sidebar ul li a {
+            color: #dffaff;
+            text-decoration: none;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.2s;
+            word-break: break-word;
+        }
+        @media (max-width: 768px) { .sidebar ul li a { font-size: 16px; gap: 10px; } }
+        @media (max-width: 600px) { .sidebar ul li a { font-size: 15px; gap: 8px; } }
+
+        .sidebar ul li a:hover {
+            color: #6fe3ff;
+            transform: translateX(5px);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(2px);
+            z-index: 1500;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Main content area */
+        .main-content {
+            margin-left: 280px;
+            padding: 100px 40px 40px 40px;
+            transition: margin-left 0.3s, padding 0.3s;
+        }
+        @media (max-width: 1200px) { .main-content { margin-left: 250px; padding: 90px 35px 35px 35px; } }
+        @media (max-width: 1024px) { .main-content { margin-left: 220px; padding: 85px 30px 30px 30px; } }
+        @media (max-width: 900px) { .main-content { margin-left: 200px; padding: 80px 25px 25px 25px; } }
+        @media (max-width: 768px) { .main-content { margin-left: 0; padding: 80px 20px 30px 20px; } }
+        @media (max-width: 600px) { .main-content { padding: 70px 15px 25px 15px; } }
+        @media (max-width: 480px) { .main-content { padding: 60px 12px 20px 12px; } }
+        @media (max-width: 360px) { .main-content { padding: 50px 10px 15px 10px; } }
+
+        .welcome-section {
+            background: rgba(11, 42, 58, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(111, 227, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .welcome-section { padding: 25px; } }
+        @media (max-width: 768px) { .welcome-section { padding: 22px; border-radius: 18px; } }
+        @media (max-width: 600px) { .welcome-section { padding: 20px; border-radius: 16px; margin-bottom: 25px; } }
+        @media (max-width: 480px) { .welcome-section { padding: 18px; border-radius: 14px; margin-bottom: 20px; } }
+        @media (max-width: 360px) { .welcome-section { padding: 15px; border-radius: 12px; margin-bottom: 15px; } }
+
+        .welcome-section h1 {
+            color: #6fe3ff;
+            font-size: 32px;
+            margin-bottom: 10px;
+            word-break: break-word;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .welcome-section h1 { font-size: 28px; } }
+        @media (max-width: 768px) { .welcome-section h1 { font-size: 26px; } }
+        @media (max-width: 600px) { .welcome-section h1 { font-size: 24px; } }
+        @media (max-width: 480px) { .welcome-section h1 { font-size: 22px; } }
+        @media (max-width: 360px) { .welcome-section h1 { font-size: 20px; } }
+
+        .welcome-section p {
+            color: #dffaff;
+            font-size: 16px;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 768px) { .welcome-section p { font-size: 15px; } }
+        @media (max-width: 600px) { .welcome-section p { font-size: 14px; } }
+        @media (max-width: 480px) { .welcome-section p { font-size: 13px; } }
+
+        /* Search Bar */
+        .search-section { margin-bottom: 30px; }
+        @media (max-width: 768px) { .search-section { margin-bottom: 25px; } }
+        @media (max-width: 600px) { .search-section { margin-bottom: 20px; } }
+        @media (max-width: 480px) { .search-section { margin-bottom: 18px; } }
+
+        .search-container { max-width: 500px; position: relative; }
+        @media (max-width: 768px) { .search-container { max-width: 100%; } }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6fe3ff;
+            font-size: 18px;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        @media (max-width: 768px) { .search-icon { left: 14px; font-size: 16px; } }
+        @media (max-width: 600px) { .search-icon { left: 12px; font-size: 15px; } }
+
+        #subjectSearch {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            background: rgba(11, 42, 58, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(111, 227, 255, 0.3);
+            border-radius: 60px;
+            color: #ffffff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { #subjectSearch { padding: 15px 18px 15px 48px; font-size: 15px; } }
+        @media (max-width: 768px) { #subjectSearch { padding: 14px 16px 14px 46px; font-size: 14px; border-radius: 50px; } }
+        @media (max-width: 600px) { #subjectSearch { padding: 12px 14px 12px 44px; font-size: 13px; } }
+        @media (max-width: 480px) { #subjectSearch { padding: 10px 12px 10px 42px; font-size: 12px; border-radius: 40px; } }
+
+        #subjectSearch::placeholder { color: #a0c7d9; opacity: 0.8; }
+        @media (max-width: 600px) { #subjectSearch::placeholder { font-size: 13px; } }
+        @media (max-width: 480px) { #subjectSearch::placeholder { font-size: 12px; } }
+
+        #subjectSearch:focus {
+            border-color: #6fe3ff;
+            box-shadow: 0 0 15px rgba(111, 227, 255, 0.2);
+            background: rgba(15, 50, 70, 0.9);
+        }
+
+        /* Subjects Grid */
+        .subjects-section { margin-bottom: 40px; }
+
+        .section-title {
+            color: #6fe3ff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .section-title { font-size: 22px; } }
+        @media (max-width: 768px) { .section-title { font-size: 20px; margin-bottom: 18px; } }
+        @media (max-width: 600px) { .section-title { font-size: 18px; margin-bottom: 15px; } }
+        @media (max-width: 480px) { .section-title { font-size: 16px; margin-bottom: 12px; } }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1200px) { .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; } }
+        @media (max-width: 1024px) { .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; } }
+        @media (max-width: 900px) { .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; } }
+        @media (max-width: 768px) { .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; } }
+        @media (max-width: 600px) { .subjects-grid { grid-template-columns: 1fr; gap: 15px; } }
+
+        .subject-card {
+            background: rgba(11, 42, 58, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(111, 227, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        @media (max-width: 1024px) { .subject-card { padding: 22px; border-radius: 14px; } }
+        @media (max-width: 900px) { .subject-card { padding: 20px; border-radius: 12px; } }
+        @media (max-width: 768px) { .subject-card { padding: 18px; } }
+        @media (max-width: 600px) { .subject-card { padding: 16px; } }
+        @media (max-width: 480px) { .subject-card { padding: 14px; border-radius: 10px; } }
+
+        .subject-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #6fe3ff;
+            opacity: 0.5;
+        }
+        @media (max-width: 600px) { .subject-card::before { width: 3px; } }
+
+        .subject-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(111, 227, 255, 0.6);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        @media (max-width: 768px) { .subject-card:hover { transform: translateY(-3px); } }
+
+        .subject-card:hover::before { opacity: 1; }
+
+        .subject-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 768px) { .subject-header { gap: 10px; margin-bottom: 14px; } }
+        @media (max-width: 600px) { .subject-header { gap: 8px; margin-bottom: 12px; } }
+
+        .subject-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(111, 227, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6fe3ff;
+            font-size: 20px;
+            font-weight: 600;
+            border: 1px solid rgba(111, 227, 255, 0.3);
+            flex-shrink: 0;
+        }
+        @media (max-width: 1024px) { .subject-icon { width: 44px; height: 44px; font-size: 18px; } }
+        @media (max-width: 900px) { .subject-icon { width: 40px; height: 40px; font-size: 17px; } }
+        @media (max-width: 768px) { .subject-icon { width: 38px; height: 38px; font-size: 16px; border-radius: 10px; } }
+        @media (max-width: 600px) { .subject-icon { width: 36px; height: 36px; font-size: 15px; } }
+        @media (max-width: 480px) { .subject-icon { width: 34px; height: 34px; font-size: 14px; } }
+
+        .subject-name {
+            color: #6fe3ff;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            word-break: break-word;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .subject-name { font-size: 18px; } }
+        @media (max-width: 900px) { .subject-name { font-size: 17px; } }
+        @media (max-width: 768px) { .subject-name { font-size: 16px; } }
+        @media (max-width: 600px) { .subject-name { font-size: 15px; } }
+        @media (max-width: 480px) { .subject-name { font-size: 14px; } }
+
+        .subject-code {
+            display: block;
+            font-size: 14px;
+            color: #a0e7ff;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        @media (max-width: 768px) { .subject-code { font-size: 13px; } }
+        @media (max-width: 600px) { .subject-code { font-size: 12px; } }
+
+        .professor-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            color: #dffaff;
+        }
+        @media (max-width: 768px) { .professor-info { gap: 10px; } }
+        @media (max-width: 600px) { .professor-info { gap: 8px; } }
+
+        .professor-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a0e7ff;
+            font-size: 15px;
+            font-weight: 500;
+            text-transform: uppercase;
+            border: 1px solid rgba(111, 227, 255, 0.2);
+            flex-shrink: 0;
+        }
+        @media (max-width: 1024px) { .professor-avatar { width: 38px; height: 38px; font-size: 14px; } }
+        @media (max-width: 900px) { .professor-avatar { width: 36px; height: 36px; font-size: 13px; } }
+        @media (max-width: 768px) { .professor-avatar { width: 34px; height: 34px; font-size: 12px; } }
+        @media (max-width: 600px) { .professor-avatar { width: 32px; height: 32px; font-size: 11px; } }
+
+        .professor-name {
+            color: #dffaff;
+            font-size: 16px;
+            font-weight: 400;
+            word-break: break-word;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .professor-name { font-size: 15px; } }
+        @media (max-width: 900px) { .professor-name { font-size: 14px; } }
+        @media (max-width: 768px) { .professor-name { font-size: 13px; } }
+        @media (max-width: 600px) { .professor-name { font-size: 12px; } }
+
+        .grade-section {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(111, 227, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        @media (max-width: 768px) { .grade-section { margin-top: 18px; padding-top: 14px; } }
+        @media (max-width: 600px) { .grade-section { margin-top: 15px; padding-top: 12px; } }
+
+        .grade-label {
+            color: #a0e7ff;
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+        }
+        @media (max-width: 768px) { .grade-label { font-size: 13px; } }
+        @media (max-width: 600px) { .grade-label { font-size: 12px; } }
+
+        .grade-value {
+            background: rgba(111, 227, 255, 0.15);
+            color: #6fe3ff;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            border: 1px solid rgba(111, 227, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .grade-value { padding: 5px 14px; font-size: 17px; } }
+        @media (max-width: 900px) { .grade-value { font-size: 16px; } }
+        @media (max-width: 768px) { .grade-value { padding: 4px 12px; font-size: 15px; } }
+        @media (max-width: 600px) { .grade-value { padding: 4px 10px; font-size: 14px; } }
+
+        /* Grade colors */
+        .grade-excellent { background: rgba(0, 200, 150, 0.3) !important; color: #00ffc3 !important; border-color: #00ffc3 !important; }
+        .grade-good { background: rgba(0, 200, 255, 0.3) !important; color: #6fe3ff !important; border-color: #6fe3ff !important; }
+        .grade-average { background: rgba(255, 200, 0, 0.3) !important; color: #ffd966 !important; border-color: #ffd966 !important; }
+        .grade-poor { background: rgba(255, 100, 100, 0.3) !important; color: #ff8a8a !important; border-color: #ff8a8a !important; }
+
+        /* Loading & empty states */
+        .loading, .error-message, .no-subjects {
+            text-align: center;
+            padding: 60px 40px;
+            color: #dffaff;
+            background: rgba(11, 42, 58, 0.8);
+            border-radius: 16px;
+            grid-column: 1 / -1;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(111, 227, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) { .loading, .error-message, .no-subjects { padding: 50px 30px; } }
+        @media (max-width: 768px) { .loading, .error-message, .no-subjects { padding: 40px 25px; border-radius: 14px; } }
+        @media (max-width: 600px) { .loading, .error-message, .no-subjects { padding: 30px 20px; border-radius: 12px; } }
+        @media (max-width: 480px) { .loading, .error-message, .no-subjects { padding: 25px 15px; border-radius: 10px; } }
+
+        .loading { color: #a0e7ff; font-size: 16px; }
+        @media (max-width: 768px) { .loading { font-size: 15px; } }
+        @media (max-width: 600px) { .loading { font-size: 14px; } }
+
+        .error-message { color: #ff8a8a; }
+
+        .no-subjects p { font-size: 18px; margin-bottom: 12px; }
+        @media (max-width: 768px) { .no-subjects p { font-size: 16px; } }
+        @media (max-width: 600px) { .no-subjects p { font-size: 15px; } }
+
+        .no-subjects-sub { opacity: 0.7; font-size: 14px !important; }
+        @media (max-width: 768px) { .no-subjects-sub { font-size: 13px !important; } }
+        @media (max-width: 600px) { .no-subjects-sub { font-size: 12px !important; } }
+
+        /* Custom SweetAlert2 styling */
+        .swal2-popup { background: #0b2a3a !important; border-radius: 22px !important; border: 1px solid rgba(110, 243, 255, 0.25) !important; }
+        .swal2-title { color: #6ef3ff !important; }
+        .swal2-html-container { color: #dffaff !important; }
+        .swal2-confirm { background: linear-gradient(135deg, #00f2ff, #7f5cff) !important; color: #020617 !important; font-weight: 600 !important; border-radius: 12px !important; }
+        .swal2-cancel { background: rgba(255, 255, 255, 0.15) !important; color: #dffaff !important; border: 2px solid #6ef3ff !important; border-radius: 12px !important; }
+
+        /* Touch-friendly */
+        @media (hover: none) and (pointer: coarse) {
+            .menu-btn, .profile, .subject-card, .profile-menu a {
+                -webkit-tap-highlight-color: transparent;
+            }
+            .subject-card:active { transform: scale(0.98); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- OFFLINE BANNER -->
+<div id="offlineBanner" class="offline-banner">
+    <i class="fas fa-wifi-slash"></i>
+    <span id="offlineMessage">You are offline. Please check your internet connection.</span>
+    <button onclick="checkConnectionAndReload()">Retry</button>
+</div>
+
+<div id="sidebarContainer"></div>
+
+<nav>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+    <div class="profile-wrapper">
+        <div class="profile" onclick="toggleProfileMenu()">
+            <img src="images/profile.png" id="navProfileImage" alt="profile">
+        </div>
+
+        <div id="profileMenu" class="profile-menu">
+            <a href="students_profile.html">Edit Profile</a>
+            <a href="#" onclick="confirmLogout(); return false;">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content Area -->
+<div class="main-content">
+    <div class="welcome-section">
+        <h1>Welcome back, <span id="fullNameDisplay">Student</span>!</h1>
+        <p>Here are your enrolled subjects and grades (including archived)</p>
+    </div>
+
+    <!-- Search Bar Section -->
+    <div class="search-section">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="subjectSearch" placeholder="Search subjects by name, code, professor, or grade...">
+        </div>
+    </div>
+
+    <!-- Subjects Section -->
+    <div class="subjects-section">
+        <div class="section-title">
+            My Subjects
+        </div>
+        
+        <div id="subjectsGridContainer" class="subjects-grid">
+            <div class="loading">Loading your subjects...</div>
+        </div>
+    </div>
+</div>
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // ---------- SUPABASE INITIALIZATION ----------
+    const { createClient } = supabase;
+    
+    const supabaseClient = createClient(
+        "https://tmyrnjdwaayelrctqppg.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteXJuamR3YWF5ZWxyY3RxcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDgzODEsImV4cCI6MjA4Njg4NDM4MX0.w_DhdLWk4gA-x434kSobbXjG83IXHpakhRsaig-zMpw"
+    );
+
+    // ===== OFFLINE DETECTION =====
+    let isOffline = !navigator.onLine;
+    const offlineBanner = document.getElementById('offlineBanner');
+
+    function updateOnlineStatus() {
+        isOffline = !navigator.onLine;
+        offlineBanner.style.display = isOffline ? 'block' : 'none';
+    }
+
+    async function checkConnectionAndReload() {
+        try {
+            await fetch('https://tmyrnjdwaayelrctqppg.supabase.co/rest/v1/', { method: 'HEAD', mode: 'no-cors' });
+            if (navigator.onLine) {
+                offlineBanner.style.display = 'none';
+                Swal.fire({ title: 'Connected!', text: 'You are back online.', icon: 'success', timer: 2000, showConfirmButton: false, background: '#0b2a3a', color: '#dffaff' });
+                loadStudentSubjects();
+            } else {
+                Swal.fire({ title: 'Still Offline', text: 'Unable to connect.', icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+            }
+        } catch {
+            Swal.fire({ title: 'Connection Failed', text: 'Please check your internet.', icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // ============================================
+    // PROFILE & UTILS
+    // ============================================
+    function toggleProfileMenu() {
+        document.getElementById('profileMenu').classList.toggle('active');
+    }
+    window.toggleProfileMenu = toggleProfileMenu;
+
+    function getCurrentStudentId() {
+        return localStorage.getItem('userId') || localStorage.getItem('studentId') || null;
+    }
+
+    function getCurrentStudentName() {
+        const firstName = localStorage.getItem('profileFirstName') || '';
+        const lastName = localStorage.getItem('profileLastName') || '';
+        const fullName = localStorage.getItem('userFullName') || '';
+        if (firstName && lastName) return `${firstName} ${lastName}`;
+        if (fullName) return fullName;
+        return 'Student';
+    }
+
+    async function loadProfileImage() {
+        const navImg = document.getElementById('navProfileImage');
+        const savedImage = localStorage.getItem('profileImage');
+        if (savedImage) navImg.src = savedImage;
+        const studentId = getCurrentStudentId();
+        if (!studentId) return;
+        try {
+            const { data, error } = await supabaseClient.from('student').select('profile-pic').eq('id', studentId).maybeSingle();
+            if (!error && data && data['profile-pic']) {
+                navImg.src = data['profile-pic'];
+                localStorage.setItem('profileImage', data['profile-pic']);
+            }
+        } catch {}
+    }
+
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?', text: "You will be logged out!", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#00f2ff', cancelButtonColor: '#ff6b6b',
+            confirmButtonText: 'Yes, logout', background: '#0b2a3a', color: '#dffaff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.clear();
+                Swal.fire({ title: 'Logged Out!', icon: 'success', confirmButtonColor: '#00f2ff', background: '#0b2a3a', color: '#dffaff' })
+                    .then(() => window.location.href = 'index.html');
+            }
+        });
+    }
+    window.confirmLogout = confirmLogout;
+
+    // ============================================
+    // SIDEBAR
+    // ============================================
+    fetch("students_sidebar.html")
+        .then(r => r.text())
+        .then(html => {
+            document.getElementById("sidebarContainer").innerHTML = html;
+            initializeSidebar();
+            initializeDashboard();
+        })
+        .catch(() => {
+            document.getElementById("sidebarContainer").innerHTML = `
+                <div class="sidebar" id="sidebar">
+                    <button class="close-btn" onclick="toggleMenu()">✕</button>
+                    <ul>
+                        <li><a href="students_dashboard.html">Dashboard</a></li>
+                        <li><a href="students_subjects.html">My Subjects</a></li>
+                        <li><a href="students_grades.html">My Grades</a></li>
+                        <li><a href="students_schedule.html">Schedule</a></li>
+                        <li><a href="students_profile.html">Profile</a></li>
+                    </ul>
+                </div>
+                <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+            `;
+            initializeSidebar();
+            initializeDashboard();
+        });
+
+    function initializeSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        if (sidebar && overlay) {
+            window.toggleMenu = function() {
+                sidebar.classList.toggle("active");
+                overlay.classList.toggle("active");
+                document.body.style.overflow = sidebar.classList.contains("active") ? "hidden" : "";
+            };
+            overlay.onclick = toggleMenu;
+        } else {
+            window.toggleMenu = function() {};
+        }
+    }
+
+    // ============================================
+    // DATA FETCHING
+    // ============================================
+    let allSubjects = [];
+
+    function getGradeClass(grade) {
+        if (!grade && grade !== 0) return '';
+        const num = parseFloat(grade);
+        if (isNaN(num)) return '';
+        if (num >= 90) return 'grade-excellent';
+        if (num >= 80) return 'grade-good';
+        if (num >= 75) return 'grade-average';
+        return 'grade-poor';
+    }
+
+    function formatAcademicTerm(term) {
+        if (!term) return '';
+        const [year, sem] = term.split('-');
+        const years = { '1':'1st Year','2':'2nd Year','3':'3rd Year','4':'4th Year' };
+        const sems = { '1':'First Semester','2':'Second Semester','S':'Summer' };
+        return `${years[year] || year} - ${sems[sem] || sem}`;
+    }
+
+    async function fetchProfessorName(professorId) {
+        if (!professorId) return 'Unknown Professor';
+        try {
+            const { data } = await supabaseClient.from('professor').select('fname, lname').eq('uid', professorId).maybeSingle();
+            if (data) return `${data.fname || ''} ${data.lname || ''}`.trim() || 'Unknown Professor';
+        } catch {}
+        return 'Unknown Professor';
+    }
+
+    // Fetch subject code from list_of_subs by subject name
+    async function fetchSubjectCode(subjectName) {
+        if (!subjectName) return 'N/A';
+        try {
+            const { data } = await supabaseClient.from('list_of_subs').select('code').eq('subject', subjectName).maybeSingle();
+            return data?.code || 'N/A';
+        } catch {
+            return 'N/A';
+        }
+    }
+
+    function showSubjectDetails(subject) {
+        let msg = '';
+        const num = parseFloat(subject.grade);
+        if (!subject.grade && subject.grade !== 0) msg = 'Grade not yet available.';
+        else if (num >= 90) msg = 'Excellent performance! 🎉';
+        else if (num >= 80) msg = 'Good job! 👍';
+        else if (num >= 75) msg = 'You\'re passing. 💪';
+        else msg = 'Need improvement. 📚';
+
+        const badge = subject.archived ? '<span style="background:#ffc107;color:#000;padding:2px 8px;border-radius:12px;font-size:12px;margin-left:10px;">Archived</span>' : '';
+        let html = `
+            <div style="text-align:left;color:#dffaff;">
+                <p><strong>Subject:</strong> ${subject.name} ${badge}</p>
+                <p><strong>Code:</strong> ${subject.code || 'N/A'}</p>
+                <p><strong>Professor:</strong> ${subject.professorName}</p>
+                <p><strong>Grade:</strong> <span style="color:#6ef3ff;font-weight:bold;">${subject.grade || '—'}</span></p>
+        `;
+        if (subject.academicTerm) html += `<p><strong>Term:</strong> ${formatAcademicTerm(subject.academicTerm)}</p>`;
+        if (subject.archived) html += `<p style="color:#ffd966;"><i class="fas fa-archive"></i> This subject has been archived.</p>`;
+        html += `<p style="margin-top:10px;font-style:italic;color:#a0e7ff;">${msg}</p></div>`;
+
+        Swal.fire({ title: subject.name, html, icon: 'info', confirmButtonText: 'Close', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+    }
+
+    async function fetchActiveEnrollments(studentId) {
+        try {
+            const { data: enrollments } = await supabaseClient.from('enrollment_sub').select('enroll_id, sub_id, year_section, grades').eq('stud_id', studentId);
+            if (!enrollments?.length) return [];
+
+            const subjectIds = enrollments.map(e => e.sub_id);
+            const { data: subjects } = await supabaseClient.from('subjects').select('id, sub, sub_code, prof_id, professor_name, academic_term').in('id', subjectIds);
+            
+            return enrollments.map(enroll => {
+                const sub = subjects?.find(s => s.id === enroll.sub_id) || {};
+                const profName = sub.professor_name || 'Unknown';
+                return {
+                    id: sub.id || enroll.sub_id,
+                    name: sub.sub || 'Unknown Subject',
+                    code: sub.sub_code || 'N/A',
+                    grade: enroll.grades || '',
+                    professorName: profName,
+                    professorInitials: profName.split(' ').map(p => p[0]).join('').toUpperCase().slice(0,2) || 'PR',
+                    academicTerm: sub.academic_term,
+                    enrollId: enroll.enroll_id,
+                    archived: false
+                };
+            });
+        } catch { return []; }
+    }
+
+    async function fetchArchivedSubjects(studentId) {
+        try {
+            const { data: mirrors } = await supabaseClient.from('subject_mirror').select('*').eq('student_id', studentId);
+            if (!mirrors?.length) return [];
+
+            // Fetch professor names
+            const profIds = [...new Set(mirrors.map(m => m.professor_id).filter(Boolean))];
+            const profMap = new Map();
+            await Promise.all(profIds.map(async pid => profMap.set(pid, await fetchProfessorName(pid))));
+
+            // Fetch subject codes in batch for performance
+            const subjectNames = [...new Set(mirrors.map(m => m.subject))];
+            const codeMap = new Map();
+            await Promise.all(subjectNames.map(async name => {
+                const code = await fetchSubjectCode(name);
+                codeMap.set(name, code);
+            }));
+
+            return mirrors.map(m => {
+                const prof = profMap.get(m.professor_id) || 'Unknown Professor';
+                const code = codeMap.get(m.subject) || 'N/A';
+                return {
+                    id: `mirror-${m.id}`,
+                    name: m.subject,
+                    code: code,
+                    grade: m.grade || '',
+                    professorName: prof,
+                    professorInitials: prof.split(' ').map(p => p[0]).join('').toUpperCase().slice(0,2) || 'PR',
+                    academicTerm: m.academic_term,
+                    archived: true
+                };
+            });
+        } catch { return []; }
+    }
+
+    async function fetchStudentSubjects() {
+        if (isOffline) return [];
+        const studentId = getCurrentStudentId();
+        if (!studentId) return [];
+        const [active, archived] = await Promise.all([fetchActiveEnrollments(studentId), fetchArchivedSubjects(studentId)]);
+        return [...active, ...archived].sort((a,b) => (a.archived - b.archived) || a.name.localeCompare(b.name));
+    }
+
+    function createSubjectCard(subject) {
+        const card = document.createElement('div');
+        card.className = 'subject-card';
+        if (subject.archived) card.style.borderLeft = '4px solid #ffc107';
+        const gradeClass = getGradeClass(subject.grade);
+        const iconText = subject.name.substring(0,2).toUpperCase();
+        const badge = subject.archived ? '<span style="background:#ffc107;color:#000;padding:2px 6px;border-radius:12px;font-size:11px;margin-left:8px;">Archived</span>' : '';
+        card.innerHTML = `
+            <div class="subject-header">
+                <div class="subject-icon">${iconText}</div>
+                <div class="subject-name">${subject.name} ${badge}<span class="subject-code">${subject.code}</span></div>
+            </div>
+            <div class="professor-info">
+                <div class="professor-avatar">${subject.professorInitials}</div>
+                <div class="professor-name">${subject.professorName}</div>
+            </div>
+            <div class="grade-section">
+                <span class="grade-label">Current Grade</span>
+                <span class="grade-value ${gradeClass}">${subject.grade || '—'}</span>
+            </div>
+        `;
+        card.addEventListener('click', () => showSubjectDetails(subject));
+        return card;
+    }
+
+    function renderSubjects(subjects) {
+        const container = document.getElementById('subjectsGridContainer');
+        container.innerHTML = '';
+        if (!subjects.length) {
+            container.innerHTML = '<div class="no-subjects"><p>No subjects found</p><p class="no-subjects-sub">You are not enrolled in any subjects.</p></div>';
+            return;
+        }
+        subjects.forEach(s => container.appendChild(createSubjectCard(s)));
+    }
+
+    async function loadStudentSubjects() {
+        const container = document.getElementById('subjectsGridContainer');
+        if (isOffline) { container.innerHTML = '<div class="error-message">You are offline.</div>'; return; }
+        container.innerHTML = '<div class="loading">Loading...</div>';
+        allSubjects = await fetchStudentSubjects();
+        renderSubjects(allSubjects);
+    }
+
+    function setupSearchListener() {
+        document.getElementById('subjectSearch').addEventListener('input', e => {
+            const term = e.target.value.toLowerCase().trim();
+            const filtered = term ? allSubjects.filter(s => 
+                s.name.toLowerCase().includes(term) || s.code.toLowerCase().includes(term) ||
+                s.professorName.toLowerCase().includes(term) || (s.grade && s.grade.includes(term))
+            ) : allSubjects;
+            renderSubjects(filtered);
+        });
+    }
+
+    async function initializeDashboard() {
+        document.getElementById('fullNameDisplay').textContent = getCurrentStudentName();
+        await loadProfileImage();
+        await loadStudentSubjects();
+        setupSearchListener();
+    }
+
+    (function checkLogin() {
+        if (!getCurrentStudentId()) console.warn('No student ID – showing demo mode');
+    })();
+
+    window.addEventListener('click', e => {
+        const menu = document.getElementById('profileMenu');
+        if (!document.querySelector('.profile')?.contains(e.target) && !menu?.contains(e.target)) menu?.classList.remove('active');
+    });
+
+    window.checkConnectionAndReload = checkConnectionAndReload;
+</script>
+
+</body>
+</html>

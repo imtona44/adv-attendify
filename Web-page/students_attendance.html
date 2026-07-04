@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
+  <title>My Attendance · ADV‑Attendify</title>
+  <link rel="icon" type="image/png" href="images/websitelogo.png">
+
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- SweetAlert2 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ===== ORIGINAL STYLES (preserved) ===== */
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      overflow-x:hidden;
+      background:url("images/backgroundhome.png") center/cover no-repeat fixed;
+    }
+
+    /* ===== OFFLINE BANNER ===== */
+    .offline-banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #ff6b6b;
+        color: white;
+        text-align: center;
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 10000;
+        display: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        backdrop-filter: blur(5px);
+        border-bottom: 1px solid #ff8a8a;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from { transform: translateY(-100%); }
+        to   { transform: translateY(0); }
+    }
+
+    .offline-banner i { margin-right: 8px; }
+    .offline-banner button {
+        background: white;
+        color: #ff6b6b;
+        border: none;
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin-left: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 12px;
+        transition: 0.2s;
+    }
+    .offline-banner button:hover {
+        background: #f0f0f0;
+        transform: scale(1.05);
+    }
+
+    nav{
+      position:fixed;
+      top:0;
+      width:100%;
+      padding:20px 40px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:rgba(0,0,0,0.25);
+      backdrop-filter:blur(8px);
+      z-index:1001;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) { nav { padding: 18px 30px; } }
+    @media (max-width: 768px)  { nav { padding: 15px 20px; } }
+    @media (max-width: 600px)  { nav { padding: 12px 15px; } }
+    @media (max-width: 480px)  { nav { padding: 10px 12px; } }
+    @media (max-width: 360px)  { nav { padding: 8px 10px; } }
+
+    .menu-btn{
+      font-size:28px;
+      background:none;
+      border:none;
+      color:#6fe3ff;
+      cursor:pointer;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) { .menu-btn { font-size: 26px; } }
+    @media (max-width: 768px)  { .menu-btn { font-size: 24px; } }
+    @media (max-width: 600px)  { .menu-btn { font-size: 22px; } }
+    @media (max-width: 480px)  { .menu-btn { font-size: 20px; } }
+    @media (max-width: 360px)  { .menu-btn { font-size: 18px; } }
+
+    .profile-wrapper{ position:relative; }
+
+    .profile{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      overflow:hidden;
+      cursor:pointer;
+      border:2px solid #6fe3ff;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) { .profile { width: 38px; height: 38px; } }
+    @media (max-width: 768px)  { .profile { width: 35px; height: 35px; } }
+    @media (max-width: 600px)  { .profile { width: 32px; height: 32px; } }
+    @media (max-width: 480px)  { .profile { width: 30px; height: 30px; border-width: 1.5px; } }
+    @media (max-width: 360px)  { .profile { width: 28px; height: 28px; } }
+
+    .profile img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .profile-menu{
+      position:absolute;
+      top:55px;
+      right:0;
+      background:#0b2a3a;
+      border-radius:12px;
+      padding:10px 0;
+      min-width:170px;
+      opacity:0;
+      pointer-events:none;
+      transition:0.25s;
+      z-index:1002;
+    }
+
+    @media (max-width: 768px) { .profile-menu { top: 48px; min-width: 150px; } }
+    @media (max-width: 600px) { .profile-menu { top: 45px; min-width: 140px; } }
+    @media (max-width: 480px) { .profile-menu { top: 42px; min-width: 130px; } }
+    @media (max-width: 360px) { .profile-menu { top: 38px; min-width: 120px; } }
+
+    .profile-menu.active{
+      opacity:1;
+      pointer-events:all;
+    }
+
+    .profile-menu a{
+      display:block;
+      padding:12px 20px;
+      color:#dffaff;
+      text-decoration:none;
+      cursor:pointer;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    @media (max-width: 768px) { .profile-menu a { padding: 10px 18px; font-size: 13px; } }
+    @media (max-width: 600px) { .profile-menu a { padding: 9px 16px; font-size: 12.5px; } }
+    @media (max-width: 480px) { .profile-menu a { padding: 8px 14px; font-size: 12px; } }
+
+    .profile-menu a:hover{
+      background:#1ea7d7;
+      color:#00141c;
+    }
+
+    /* ===== MAIN CONTAINER – SUBJECT GRID ===== */
+    .attendance-container {
+      margin-top: 100px;
+      margin-left: 250px;      /* sidebar space */
+      padding: 30px 40px;
+      transition: margin-left 0.3s, padding 0.3s;
+      max-width: 1300px;
+    }
+
+    @media (max-width: 1200px) { .attendance-container { margin-left: 220px; padding: 25px 35px; } }
+    @media (max-width: 1024px) { .attendance-container { margin-left: 200px; padding: 22px 30px; } }
+    @media (max-width: 900px)  { .attendance-container { margin-left: 180px; padding: 20px 25px; } }
+    @media (max-width: 768px)  { .attendance-container { margin-left: 20px; padding: 20px; } }
+    @media (max-width: 600px)  { .attendance-container { margin-left: 15px; padding: 18px; } }
+    @media (max-width: 480px)  { .attendance-container { margin-left: 10px; margin-right: 10px; padding: 15px; } }
+    @media (max-width: 360px)  { .attendance-container { margin-left: 5px; margin-right: 5px; padding: 12px; } }
+
+    .attendance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      color: #0a8baf;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    @media (max-width: 768px) { .attendance-header { flex-direction: column; align-items: flex-start; gap: 12px; } }
+    @media (max-width: 480px) { .attendance-header { gap: 10px; margin-bottom: 20px; } }
+
+    .attendance-header h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #0a8baf;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) { .attendance-header h1 { font-size: 2rem; } }
+    @media (max-width: 900px)  { .attendance-header h1 { font-size: 1.8rem; } }
+    @media (max-width: 768px)  { .attendance-header h1 { font-size: 1.6rem; } }
+    @media (max-width: 600px)  { .attendance-header h1 { font-size: 1.4rem; } }
+    @media (max-width: 480px)  { .attendance-header h1 { font-size: 1.3rem; } }
+    @media (max-width: 360px)  { .attendance-header h1 { font-size: 1.2rem; } }
+
+    .live-date {
+      background: rgba(10, 40, 55, 0.7);
+      backdrop-filter: blur(4px);
+      padding: 12px 24px;
+      border-radius: 50px;
+      border: 1px solid #3fc3e0;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #e6fbff;
+      box-shadow: 0 0 15px rgba(110, 227, 255, 0.2);
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1024px) { .live-date { padding: 10px 20px; font-size: 1.1rem; } }
+    @media (max-width: 900px)  { .live-date { padding: 8px 18px; font-size: 1rem; } }
+    @media (max-width: 768px)  { .live-date { padding: 8px 16px; font-size: 0.95rem; white-space: normal; width: 100%; text-align: center; } }
+    @media (max-width: 600px)  { .live-date { padding: 7px 14px; font-size: 0.9rem; } }
+    @media (max-width: 480px)  { .live-date { padding: 6px 12px; font-size: 0.85rem; } }
+
+    /* ----- SUBJECTS GRID ----- */
+    .subjects-section-title {
+      margin: 0 0 15px 0;
+      font-size: 1.8rem;
+      color: #0a8baf;
+      border-bottom: 1px solid #53c8e0;
+      padding-bottom: 8px;
+      display: inline-block;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) { .subjects-section-title { font-size: 1.6rem; } }
+    @media (max-width: 900px)  { .subjects-section-title { font-size: 1.5rem; } }
+    @media (max-width: 768px)  { .subjects-section-title { font-size: 1.4rem; } }
+    @media (max-width: 600px)  { .subjects-section-title { font-size: 1.3rem; } }
+    @media (max-width: 480px)  { .subjects-section-title { font-size: 1.2rem; padding-bottom: 5px; } }
+
+    .subjects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+      margin: 25px 0 30px;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1200px) { .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; } }
+    @media (max-width: 900px)  { .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; } }
+    @media (max-width: 768px)  { .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; } }
+    @media (max-width: 600px)  { .subjects-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+    .subject-card {
+      background: rgba(8, 35, 48, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid #2d99ae;
+      border-radius: 28px;
+      padding: 22px 20px;
+      color: #e1f7ff;
+      box-shadow: 0 10px 20px rgba(0,20,30,0.7);
+      transition: all 0.2s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @media (max-width: 900px)  { .subject-card { padding: 20px 18px; border-radius: 24px; } }
+    @media (max-width: 768px)  { .subject-card { padding: 18px 16px; border-radius: 22px; } }
+    @media (max-width: 600px)  { .subject-card { padding: 16px 14px; border-radius: 20px; } }
+    @media (max-width: 480px)  { .subject-card { padding: 14px 12px; border-radius: 18px; } }
+
+    .subject-card:hover {
+      transform: translateY(-5px);
+      border-color: #6fe3ff;
+      background: rgba(10, 50, 68, 0.95);
+      box-shadow: 0 18px 28px -8px #005c77;
+    }
+
+    @media (max-width: 768px) { .subject-card:hover { transform: translateY(-3px); } }
+
+    .subject-name {
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #b5f0ff;
+      word-break: break-word;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) { .subject-name { font-size: 1.5rem; } }
+    @media (max-width: 900px)  { .subject-name { font-size: 1.4rem; } }
+    @media (max-width: 768px)  { .subject-name { font-size: 1.3rem; } }
+    @media (max-width: 600px)  { .subject-name { font-size: 1.2rem; } }
+    @media (max-width: 480px)  { .subject-name { font-size: 1.1rem; } }
+
+    .subject-code {
+      font-size: 1rem;
+      background: #0e4b60;
+      padding: 5px 14px;
+      border-radius: 40px;
+      display: inline-block;
+      width: fit-content;
+      border: 1px solid #47c5e0;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .subject-code { font-size: 0.9rem; padding: 4px 12px; } }
+    @media (max-width: 600px) { .subject-code { font-size: 0.85rem; padding: 4px 10px; } }
+
+    .professor-name {
+      font-size: 0.9rem;
+      color: #9dcbd9;
+      margin-top: -5px;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .professor-name { font-size: 0.85rem; } }
+    @media (max-width: 600px) { .professor-name { font-size: 0.8rem; } }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 5px 0;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .next-class-badge {
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(2px);
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      color: #9de0ff;
+      border: 1px dashed #45b0cc;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .next-class-badge { padding: 6px 12px; font-size: 0.85rem; } }
+    @media (max-width: 600px) { .next-class-badge { padding: 5px 10px; font-size: 0.8rem; } }
+
+    .class-time {
+      display: flex;
+      gap: 10px;
+      font-size: 0.95rem;
+      background: #02222e;
+      padding: 8px 14px;
+      border-radius: 40px;
+      width: fit-content;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .class-time { font-size: 0.85rem; padding: 6px 10px; } }
+    .class-time span { background: #0a4353; padding: 2px 12px; border-radius: 30px; }
+
+    .attendance-summary-badge {
+      background: #1c4b5c;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      border: 1px solid #3fa3c0;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .attendance-summary-badge { padding: 5px 10px; font-size: 0.8rem; } }
+
+    /* ----- MODAL (subject detail) ----- */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,10,18,0.8);
+      backdrop-filter: blur(6px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s;
+      padding: 20px;
+    }
+
+    @media (max-width: 600px) { .modal-overlay { padding: 15px; } }
+    @media (max-width: 480px) { .modal-overlay { padding: 10px; } }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-card {
+      width: 90%;
+      max-width: 800px;
+      background: #08222b;
+      border: 2px solid #28b4d4;
+      border-radius: 40px;
+      padding: 30px;
+      color: #ebfeff;
+      box-shadow: 0 30px 40px #00161f;
+      transform: scale(0.95);
+      transition: 0.2s;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 1024px) { .modal-card { max-width: 700px; padding: 25px; } }
+    @media (max-width: 900px)  { .modal-card { max-width: 650px; padding: 22px; border-radius: 35px; } }
+    @media (max-width: 768px)  { .modal-card { max-width: 95%; padding: 20px; border-radius: 30px; } }
+    @media (max-width: 600px)  { .modal-card { padding: 18px; border-radius: 25px; } }
+    @media (max-width: 480px)  { .modal-card { padding: 15px; border-radius: 20px; } }
+    @media (max-width: 360px)  { .modal-card { padding: 12px; border-radius: 18px; } }
+
+    .modal-overlay.active .modal-card { transform: scale(1); }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #288caa;
+      padding-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .modal-header h2 {
+      font-size: 2rem;
+      color: #7ae9ff;
+      word-break: break-word;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 1024px) { .modal-header h2 { font-size: 1.8rem; } }
+    @media (max-width: 900px)  { .modal-header h2 { font-size: 1.6rem; } }
+    @media (max-width: 768px)  { .modal-header h2 { font-size: 1.4rem; } }
+    @media (max-width: 600px)  { .modal-header h2 { font-size: 1.2rem; } }
+    @media (max-width: 480px)  { .modal-header h2 { font-size: 1.1rem; } }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: #aae6ff;
+      font-size: 32px;
+      cursor: pointer;
+      line-height: 1;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .close-modal { font-size: 28px; width: 35px; height: 35px; } }
+    @media (max-width: 600px) { .close-modal { font-size: 24px; width: 32px; height: 32px; } }
+    @media (max-width: 480px) { .close-modal { font-size: 22px; width: 30px; height: 30px; } }
+
+    .close-modal:hover { background: rgba(255,255,255,0.1); }
+
+    .modal-subtitle {
+      margin-bottom: 20px;
+      color: #b0e6ff;
+      font-size: 1rem;
+      background: #0f3a48;
+      padding: 12px 20px;
+      border-radius: 40px;
+      border: 1px solid #3ba6c2;
+      word-break: break-word;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .modal-subtitle { padding: 10px 16px; font-size: 0.95rem; border-radius: 30px; } }
+    @media (max-width: 600px) { .modal-subtitle { padding: 8px 14px; font-size: 0.9rem; } }
+    @media (max-width: 480px) { .modal-subtitle { padding: 7px 12px; font-size: 0.85rem; } }
+
+    .modal-search {
+      margin: 15px 0 20px;
+      position: relative;
+    }
+
+    .modal-search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6fe3ff;
+      font-size: 18px;
+    }
+
+    @media (max-width: 768px) { .modal-search-icon { left: 15px; font-size: 16px; } }
+    @media (max-width: 600px) { .modal-search-icon { left: 12px; font-size: 14px; } }
+
+    .modal-search input {
+      width: 100%;
+      padding: 16px 20px 16px 52px;
+      background: #0c3040;
+      border: 1px solid #3193b0;
+      border-radius: 60px;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .modal-search input { padding: 14px 18px 14px 48px; font-size: 0.95rem; } }
+    @media (max-width: 600px) { .modal-search input { padding: 12px 16px 12px 44px; font-size: 0.9rem; border-radius: 50px; } }
+    @media (max-width: 480px) { .modal-search input { padding: 10px 14px 10px 40px; font-size: 0.85rem; } }
+
+    .modal-search input:focus {
+      border-color: #6fe3ff;
+      box-shadow: 0 0 12px #006b8f;
+    }
+
+    .modal-logs-container {
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    @media (max-width: 768px) { .modal-logs-container { max-height: 350px; } }
+    @media (max-width: 600px) { .modal-logs-container { max-height: 320px; } }
+    @media (max-width: 480px) { .modal-logs-container { max-height: 300px; } }
+
+    .modal-log-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f3240;
+      margin: 8px 0;
+      padding: 14px 20px;
+      border-radius: 50px;
+      border: 1px solid #2b8da8;
+      flex-wrap: wrap;
+      gap: 10px;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .modal-log-row { padding: 12px 16px; border-radius: 40px; } }
+    @media (max-width: 600px) { .modal-log-row { padding: 10px 14px; border-radius: 30px; flex-direction: column; align-items: flex-start; } }
+    @media (max-width: 480px) { .modal-log-row { padding: 8px 12px; } }
+
+    .modal-log-date { width: 110px; font-weight: 300; }
+    @media (max-width: 768px) { .modal-log-date { width: 100px; } }
+    @media (max-width: 600px) { .modal-log-date { width: 100%; } }
+
+    .modal-log-time { width: 150px; font-family: monospace; }
+    @media (max-width: 768px) { .modal-log-time { width: 130px; } }
+    @media (max-width: 600px) { .modal-log-time { width: 100%; } }
+
+    .modal-log-time-in { color: #9de0ff; }
+    .modal-log-status { width: 90px; text-align: right; }
+    @media (max-width: 600px) { .modal-log-status { width: 100%; text-align: left; } }
+
+    .badge {
+      padding: 5px 14px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .badge { padding: 4px 12px; font-size: 0.75rem; } }
+
+    .badge-success { background: #008b74; color: white; }
+    .badge-warning { background: #b87c1b; color: white; }
+    .badge-absent  { background: #8b3a3a; color: #ffd6d6; }
+
+    .no-logs-msg {
+      text-align: center;
+      padding: 30px;
+      background: #0a2c38;
+      border-radius: 60px;
+      color: #a0cedf;
+    }
+
+    @media (max-width: 600px) { .no-logs-msg { padding: 20px; border-radius: 40px; } }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 30px;
+      color: #6fe3ff;
+    }
+
+    .hardware-badge {
+      display: inline-block;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(2px);
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      color: #b6f2ff;
+      border: 1px dashed #5fdaff;
+      margin-top: 30px;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) { .hardware-badge { padding: 6px 14px; font-size: 0.8rem; margin-top: 20px; } }
+    @media (max-width: 600px) { .hardware-badge { padding: 5px 12px; font-size: 0.75rem; } }
+
+    #sidebarContainer { position: relative; z-index: 1002; }
+
+    #overlay {
+      position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);
+      backdrop-filter:blur(3px); z-index:999; opacity:0; pointer-events:none; transition:0.25s;
+    }
+
+    #overlay.active { opacity: 1; pointer-events: all; }
+
+    /* SweetAlert custom */
+    .swal2-popup {
+        background: #0b2a3a !important;
+        border-radius: 22px !important;
+        border: 1px solid rgba(110, 243, 255, 0.25) !important;
+    }
+    .swal2-title { color: #6ef3ff !important; }
+    .swal2-html-container { color: #dffaff !important; }
+    .swal2-confirm {
+        background: linear-gradient(135deg, #00f2ff, #7f5cff) !important;
+        color: #020617 !important;
+        font-weight: 600 !important;
+        border-radius: 12px !important;
+    }
+    .swal2-cancel {
+        background: rgba(255, 255, 255, 0.15) !important;
+        color: #dffaff !important;
+        border: 2px solid #6ef3ff !important;
+        border-radius: 12px !important;
+    }
+
+    /* Touch-friendly */
+    @media (hover: none) and (pointer: coarse) {
+        .menu-btn, .profile, .subject-card, .close-modal, .profile-menu a {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .subject-card:active { transform: scale(0.98); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- OFFLINE BANNER -->
+  <div id="offlineBanner" class="offline-banner">
+      <i class="fas fa-wifi-slash"></i>
+      <span id="offlineMessage">You are offline. Please check your internet connection.</span>
+      <button onclick="checkConnectionAndReload()">Retry</button>
+  </div>
+
+  <div id="sidebarContainer"></div>
+
+  <nav>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <div class="profile-wrapper">
+      <div class="profile" onclick="toggleProfileMenu()">
+        <img src="images/profile.png" alt="profile" id="navProfileImage">
+      </div>
+      <div id="profileMenu" class="profile-menu">
+        <a href="students_profile.html">Edit Profile</a>
+        <a href="#" onclick="confirmLogout(); return false;">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN DASHBOARD: SUBJECT GRID -->
+  <div class="attendance-container">
+    <div class="attendance-header">
+      <h1>My Attendance</h1>
+      <div class="live-date" id="liveDateDisplay"></div>
+    </div>
+
+    <h3 class="subjects-section-title">My Enrolled Subjects</h3>
+    <div class="subjects-grid" id="subjectsGridContainer">
+      <div class="loading-spinner">Loading your subjects...</div>
+    </div>
+
+    <div class="hardware-badge">
+      realtime attendance records
+    </div>
+  </div>
+
+  <!-- MODAL for subject details -->
+  <div class="modal-overlay" id="subjectModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modalSubjectTitle">Subject</h2>
+        <button class="close-modal" id="closeModalBtn">&times;</button>
+      </div>
+      <div class="modal-subtitle" id="modalSubjectInfo">
+        <span id="modalSubjectCode"></span> • Professor: <span id="modalProfessor"></span>
+      </div>
+      <div class="modal-search">
+        <span class="modal-search-icon">🔍</span>
+        <input type="text" id="modalSearchInput" placeholder="Search by date or status...">
+      </div>
+      <div class="modal-logs-container" id="modalLogsContainer">
+        <!-- populated via JS -->
+      </div>
+      <div class="modal-footer" style="margin-top:16px; text-align:right; color:#64c7e0;" id="modalLogCount"></div>
+    </div>
+  </div>
+
+  <div id="overlay" onclick="toggleMenu()"></div>
+
+  <!-- SweetAlert2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    // ---------- SUPABASE INITIALIZATION ----------
+    const { createClient } = supabase;
+    
+    const supabaseClient = createClient(
+        "https://tmyrnjdwaayelrctqppg.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteXJuamR3YWF5ZWxyY3RxcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDgzODEsImV4cCI6MjA4Njg4NDM4MX0.w_DhdLWk4gA-x434kSobbXjG83IXHpakhRsaig-zMpw"
+    );
+
+    // ===== OFFLINE DETECTION =====
+    let isOffline = !navigator.onLine;
+    const offlineBanner = document.getElementById('offlineBanner');
+
+    function updateOnlineStatus() {
+        isOffline = !navigator.onLine;
+        offlineBanner.style.display = isOffline ? 'block' : 'none';
+    }
+
+    async function checkConnectionAndReload() {
+        try {
+            await fetch('https://tmyrnjdwaayelrctqppg.supabase.co/rest/v1/', { method: 'HEAD', mode: 'no-cors' });
+            if (navigator.onLine) {
+                offlineBanner.style.display = 'none';
+                Swal.fire({ title: 'Connected!', text: 'You are back online.', icon: 'success', timer: 2000, showConfirmButton: false, background: '#0b2a3a', color: '#dffaff' });
+                renderSubjectCards();
+            } else {
+                Swal.fire({ title: 'Still Offline', text: 'Unable to connect to the internet.', icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00b8d4' });
+            }
+        } catch (error) {
+            Swal.fire({ title: 'Connection Failed', text: 'Unable to connect to the server.', icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00b8d4' });
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // ---------- GET CURRENT STUDENT ----------
+    function getCurrentStudentId() {
+        return localStorage.getItem('userId');
+    }
+
+    // ---------- SIDEBAR & PROFILE ----------
+    fetch("students_sidebar.html")
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById("sidebarContainer").innerHTML = html;
+        initializeSidebar();
+      })
+      .catch(() => initializeSidebar());
+
+    function initializeSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      if (sidebar && overlay) {
+        window.toggleMenu = function(){
+          sidebar.classList.toggle("active");
+          overlay.classList.toggle("active");
+        };
+        overlay.onclick = toggleMenu;
+      } else {
+        window.toggleMenu = function() {};
+      }
+    }
+
+    // ---------- PROFILE MENU ----------
+    function toggleProfileMenu(){
+      document.getElementById("profileMenu").classList.toggle("active");
+    }
+
+    document.addEventListener("click", function(e){
+      const profile = document.querySelector(".profile");
+      const menu = document.getElementById("profileMenu");
+      if(profile && menu && !profile.contains(e.target) && !menu.contains(e.target)){
+        menu.classList.remove("active");
+      }
+    });
+
+    // ---------- LOAD PROFILE IMAGE ----------
+    async function loadProfileImage() {
+      const navImg = document.getElementById('navProfileImage');
+      const studentId = getCurrentStudentId();
+      if (!studentId) { navImg.src = 'images/profile.png'; return; }
+      try {
+        const { data, error } = await supabaseClient.from('student').select('profile-pic').eq('id', studentId).single();
+        if (error) { navImg.src = 'images/profile.png'; return; }
+        navImg.src = (data && data['profile-pic']) ? data['profile-pic'] : 'images/profile.png';
+      } catch (error) {
+        navImg.src = 'images/profile.png';
+      }
+    }
+
+    // ---------- LOGOUT ----------
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out of your account!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#00f2ff',
+            cancelButtonColor: '#ff6b6b',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel',
+            background: '#0b2a3a',
+            color: '#dffaff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.clear();
+                Swal.fire({ title: 'Logged Out!', text: 'You have been successfully logged out.', icon: 'success', confirmButtonColor: '#00f2ff', background: '#0b2a3a', color: '#dffaff' }).then(() => {
+                    window.location.href = 'index.html';
+                });
+            }
+        });
+    }
+
+    function showSettings() {
+        Swal.fire({ title: 'Settings', text: 'Settings panel coming soon!', icon: 'info', background: '#0b2a3a', color: '#ffffff', confirmButtonColor: '#00b8d4' });
+    }
+
+    // ---------- LIVE DATE ----------
+    (function() {
+      function updateLiveDate() {
+        const now = new Date();
+        const formatted = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+        const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+        const liveEl = document.getElementById('liveDateDisplay');
+        if (liveEl) liveEl.innerHTML = `${formatted} &nbsp; <span style="background:rgba(0,0,0,0.2); padding:5px 10px; border-radius:30px; display:inline-block; margin-top:5px;">${timeStr}</span>`;
+      }
+      updateLiveDate();
+      setInterval(updateLiveDate, 1000);
+    })();
+
+    // ---------- HELPER FUNCTIONS ----------
+    function formatTime(timeString) {
+      if (!timeString || timeString === '—') return '—';
+      const [hours, minutes] = timeString.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${minutes} ${ampm}`;
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function formatNextSchedule(schedule) {
+      if (!schedule) return 'No upcoming schedule';
+      const date = formatDate(schedule.date);
+      const start = formatTime(schedule['time-in']);
+      return `${date} • ${start}`;
+    }
+
+    // ========== REVISED DATA FETCHING ==========
+    // Fetch student's enrolled subjects, their schedules, and attendance stats from schedule_list
+    async function getStudentSubjectsWithAttendance() {
+      if (isOffline) return [];
+
+      const studentId = getCurrentStudentId();
+      if (!studentId) return [];
+
+      try {
+        // 1. Get enrollments with subject details
+        const { data: enrollments, error: enrollError } = await supabaseClient
+          .from('enrollment_sub')
+          .select(`
+            sub_id,
+            year_section,
+            subjects!inner (
+              id,
+              sub,
+              sub_code,
+              professor_name
+            )
+          `)
+          .eq('stud_id', studentId);
+
+        if (enrollError) {
+          console.error('Error fetching enrollments:', enrollError);
+          return [];
+        }
+        if (!enrollments || enrollments.length === 0) return [];
+
+        // Group by subject (in case student enrolled in multiple sections of same subject)
+        const subjectMap = new Map();
+        enrollments.forEach(e => {
+          const sub = e.subjects;
+          if (!sub) return;
+          const key = sub.id;
+          if (!subjectMap.has(key)) {
+            subjectMap.set(key, {
+              ...sub,
+              yearSection: e.year_section,
+              enrollments: [e]
+            });
+          } else {
+            // If multiple sections, store all; we'll use the first for display
+            subjectMap.get(key).enrollments.push(e);
+          }
+        });
+
+        const subjects = Array.from(subjectMap.values());
+
+        // 2. For each subject, get all schedules that match the student's year-section
+        const subjectNames = subjects.map(s => s.sub);
+        if (subjectNames.length === 0) return [];
+
+        const { data: allSchedules, error: schedError } = await supabaseClient
+          .from('schedule')
+          .select('*')
+          .in('sub', subjectNames)
+          .order('date', { ascending: true });
+
+        if (schedError) {
+          console.error('Error fetching schedules:', schedError);
+          return subjects.map(s => ({ ...s, schedules: [], stats: { total:0, present:0, late:0, absent:0 }, nextSchedule: null }));
+        }
+
+        // 3. For each schedule that matches student's section, fetch attendance from schedule_list
+        const scheduleIds = allSchedules?.filter(s => {
+          // Match year-section exactly (student's enrollment year_section)
+          const subject = subjects.find(sub => sub.sub === s.sub);
+          return subject && s['year-section'] === subject.yearSection;
+        }).map(s => s.id) || [];
+
+        let attendanceRecords = [];
+        if (scheduleIds.length > 0) {
+          const { data: attData, error: attError } = await supabaseClient
+            .from('schedule_list')
+            .select('*')
+            .eq('student_id', studentId)
+            .in('sched_id', scheduleIds);
+
+          if (!attError) attendanceRecords = attData || [];
+        }
+
+        // 4. Build per-subject data
+        const result = subjects.map(subject => {
+          const subjectSchedules = (allSchedules || []).filter(s => 
+            s.sub === subject.sub && s['year-section'] === subject.yearSection
+          );
+
+          // Map attendance by sched_id for quick lookup
+          const attMap = new Map();
+          attendanceRecords.filter(a => subjectSchedules.some(s => s.id === a.sched_id))
+            .forEach(a => attMap.set(a.sched_id, a));
+
+          // Stats
+          let present = 0, late = 0, absent = 0;
+          const logs = [];
+          
+          subjectSchedules.forEach(sched => {
+            const att = attMap.get(sched.id);
+            let status = 'absent';
+            let timeIn = null;
+            let timeOut = sched['time-out']; // schedule's time-out as fallback
+
+            if (att) {
+              status = att.status || 'absent';
+              timeIn = att.time_in;
+            }
+            
+            if (status === 'present') present++;
+            else if (status === 'late') late++;
+            else absent++;
+
+            // For modal logs
+            logs.push({
+              date: sched.date,
+              time_in: timeIn,
+              time_out: timeOut,
+              status: status,
+              schedule: sched
+            });
+          });
+
+          // Sort logs by date descending (most recent first)
+          logs.sort((a, b) => a.date < b.date ? 1 : -1);
+
+          // Next upcoming class (first future schedule)
+          const todayStr = new Date().toISOString().split('T')[0];
+          const nextSchedule = subjectSchedules.find(s => s.date >= todayStr) || null;
+
+          return {
+            ...subject,
+            schedules: subjectSchedules,
+            stats: { total: subjectSchedules.length, present, late, absent },
+            attendanceLogs: logs,
+            nextSchedule
+          };
+        });
+
+        return result;
+      } catch (error) {
+        console.error('Unexpected error:', error);
+        return [];
+      }
+    }
+
+    // ---------- RENDER SUBJECT CARDS ----------
+    async function renderSubjectCards() {
+      const grid = document.getElementById('subjectsGridContainer');
+      if (!grid) return;
+
+      if (isOffline) {
+        grid.innerHTML = '<div class="no-logs-msg">You are offline. Please check your internet connection to view subjects.</div>';
+        return;
+      }
+
+      grid.innerHTML = '<div class="loading-spinner">Loading your subjects...</div>';
+
+      const subjects = await getStudentSubjectsWithAttendance();
+
+      if (subjects.length === 0) {
+        grid.innerHTML = '<div class="no-logs-msg">You are not enrolled in any subjects yet.</div>';
+        return;
+      }
+
+      grid.innerHTML = '';
+      
+      subjects.forEach(sub => {
+        const nextClass = formatNextSchedule(sub.nextSchedule);
+        const stats = sub.stats;
+        const attendanceStats = `${stats.present} Present, ${stats.late} Late, ${stats.absent} Absent`;
+
+        const card = document.createElement('div');
+        card.className = 'subject-card';
+        card.innerHTML = `
+          <div class="subject-name">${sub.sub}</div>
+          <div class="subject-code">${sub.sub_code || 'No code'}</div>
+          <div class="professor-name">Prof. ${sub.professor_name || 'Unknown'}</div>
+          <div class="meta-row">
+            <span class="next-class-badge">next: ${nextClass}</span>
+          </div>
+          <div class="attendance-summary-badge">${attendanceStats}</div>
+        `;
+
+        card.addEventListener('click', () => openSubjectModal(sub));
+        grid.appendChild(card);
+      });
+    }
+
+    // ---------- MODAL LOGIC ----------
+    const modalOverlay = document.getElementById('subjectModal');
+    const modalTitle = document.getElementById('modalSubjectTitle');
+    const modalSubjectCode = document.getElementById('modalSubjectCode');
+    const modalProfessor = document.getElementById('modalProfessor');
+    const modalLogs = document.getElementById('modalLogsContainer');
+    const modalSearch = document.getElementById('modalSearchInput');
+    const modalLogCount = document.getElementById('modalLogCount');
+    let currentSubject = null;
+    let currentAttendanceLogs = [];
+
+    async function openSubjectModal(subject) {
+      if (isOffline) {
+        Swal.fire({ title: 'No Internet Connection', text: 'You need an internet connection to view attendance details.', icon: 'error', background: '#1a2e3a', color: '#ffffff', confirmButtonColor: '#00b8d4' });
+        return;
+      }
+
+      currentSubject = subject;
+      modalTitle.innerText = subject.sub;
+      modalSubjectCode.innerText = subject.sub_code || 'No code';
+      modalProfessor.innerText = subject.professor_name || 'Unknown';
+      
+      modalLogs.innerHTML = '<div class="loading-spinner">Loading attendance...</div>';
+      modalSearch.value = '';
+      
+      // Use pre-fetched logs from the subject object
+      currentAttendanceLogs = subject.attendanceLogs || [];
+      
+      renderModalLogs('');
+      modalOverlay.classList.add('active');
+    }
+
+    function renderModalLogs(filter) {
+      let logs = [...currentAttendanceLogs];
+      const filterLower = filter.toLowerCase().trim();
+
+      if (filterLower) {
+        logs = logs.filter(l => 
+          l.date.includes(filterLower) || 
+          l.status.toLowerCase().includes(filterLower) ||
+          (l.time_in && l.time_in.includes(filterLower))
+        );
+      }
+
+      // Already sorted by date desc in fetch
+
+      if (logs.length === 0) {
+        modalLogs.innerHTML = `<div class="no-logs-msg">No attendance records match</div>`;
+        modalLogCount.innerText = '0 records';
+        return;
+      }
+
+      let html = '';
+      logs.forEach(log => {
+        let statusClass = 'badge-absent';
+        let statusText = 'ABSENT';
+        
+        if (log.status === 'present') {
+          statusClass = 'badge-success';
+          statusText = 'PRESENT';
+        } else if (log.status === 'late') {
+          statusClass = 'badge-warning';
+          statusText = 'LATE';
+        }
+        
+        const timeIn = log.time_in ? formatTime(log.time_in) : '—';
+        const timeOut = log.time_out ? formatTime(log.time_out) : '—';
+
+        html += `
+          <div class="modal-log-row">
+            <span class="modal-log-date">${formatDate(log.date)}</span>
+            <span class="modal-log-time"><span class="modal-log-time-in">${timeIn}</span> → ${timeOut}</span>
+            <span class="modal-log-status"><span class="badge ${statusClass}">${statusText}</span></span>
+          </div>
+        `;
+      });
+      
+      modalLogs.innerHTML = html;
+      modalLogCount.innerText = `${logs.length} record${logs.length !== 1 ? 's' : ''}`;
+    }
+
+    // Search inside modal
+    modalSearch.addEventListener('input', function(e) {
+      if (currentSubject) renderModalLogs(e.target.value);
+    });
+
+    // Close modal
+    document.getElementById('closeModalBtn').addEventListener('click', () => {
+      modalOverlay.classList.remove('active');
+      currentSubject = null;
+      currentAttendanceLogs = [];
+    });
+    
+    modalOverlay.addEventListener('click', function(e) {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.remove('active');
+        currentSubject = null;
+        currentAttendanceLogs = [];
+      }
+    });
+
+    // ---------- INITIALIZATION ----------
+    document.addEventListener('DOMContentLoaded', async () => {
+      const studentId = getCurrentStudentId();
+      if (!studentId) {
+        window.location.href = 'index.html';
+        return;
+      }
+      await loadProfileImage();
+      await renderSubjectCards();
+    });
+
+    // Refresh every 30 seconds if online and modal closed
+    setInterval(async () => {
+      if (!isOffline && !modalOverlay.classList.contains('active')) {
+        await renderSubjectCards();
+      }
+    }, 30000);
+
+    // Expose functions globally
+    window.toggleMenu = toggleMenu;
+    window.toggleProfileMenu = toggleProfileMenu;
+    window.confirmLogout = confirmLogout;
+    window.showSettings = showSettings;
+    window.checkConnectionAndReload = checkConnectionAndReload;
+  </script>
+</body>
+</html>

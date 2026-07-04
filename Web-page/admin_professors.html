@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+<title>Admin Professors Monitoring | ADV-Attendify</title>
+
+<link rel="icon" type="image/png" href="images/websitelogo.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+/* ========== ALL EXISTING CSS (UNCHANGED) ========== */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body{
+    min-height:100vh;
+    overflow-x:hidden;
+    background:url("images/backgroundhome.png") center/cover no-repeat fixed;
+}
+
+nav{
+    position:fixed;
+    top:0;
+    width:100%;
+    padding:20px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(0,0,0,0.25);
+    backdrop-filter:blur(8px);
+    z-index:1001;
+}
+
+.menu-btn{
+    font-size:28px;
+    background:none;
+    border:none;
+    color:#6fe3ff;
+    cursor:pointer;
+}
+
+.profile-wrapper{ position:relative; }
+
+.profile{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    overflow:hidden;
+    cursor:pointer;
+    border:2px solid #6fe3ff;
+}
+
+.profile img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.profile-menu{
+    position:absolute;
+    top:55px;
+    right:0;
+    background:#0b2a3a;
+    border-radius:12px;
+    padding:10px 0;
+    min-width:170px;
+    opacity:0;
+    pointer-events:none;
+    transition:0.25s;
+    z-index:1002;
+}
+
+.profile-menu.active{
+    opacity:1;
+    pointer-events:all;
+}
+
+.profile-menu a{
+    display:block;
+    padding:12px 20px;
+    color:#dffaff;
+    text-decoration:none;
+    cursor:pointer;
+}
+
+.profile-menu a:hover{
+    background:#1ea7d7;
+    color:#00141c;
+}
+
+.hero{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:120px 40px 40px;
+}
+
+.main-panel{
+    width:100%;
+    max-width:1400px;
+    padding:35px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(14px);
+    border-radius:26px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+
+.header-section{
+    text-align:center;
+    margin-bottom:30px;
+    color:#fff;
+}
+
+.header-section h1{
+    font-size:2.5rem;
+    color:#6fe3ff;
+    margin-bottom:10px;
+    text-shadow:0 2px 5px rgba(0,0,0,0.3);
+}
+
+.header-section p{
+    font-size:1.1rem;
+    color:#070808;
+}
+
+.filter-section{
+    background:rgba(11,42,58,0.8);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:30px;
+    border:1px solid rgba(110,243,255,0.3);
+}
+
+.filter-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:20px;
+    align-items:end;
+}
+
+.filter-item{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.filter-item label{
+    color:#6fe3ff;
+    font-weight:500;
+    font-size:0.95rem;
+}
+
+.filter-item select,
+.filter-item input{
+    background:rgba(0,20,28,0.6);
+    border:1px solid #2c5a6e;
+    border-radius:12px;
+    padding:12px 15px;
+    color:#dffaff;
+    font-size:0.95rem;
+    outline:none;
+    transition:0.2s;
+}
+
+.filter-item select:hover,
+.filter-item input:hover{ border-color:#6fe3ff; }
+
+.filter-item select:focus,
+.filter-item input:focus{
+    border-color:#6fe3ff;
+    box-shadow:0 0 0 2px rgba(110,243,255,0.2);
+}
+
+.filter-item option{
+    background:#0b2a3a;
+    color:#dffaff;
+}
+
+.reset-btn{
+    background:rgba(255,255,255,0.1);
+    border:2px solid #6fe3ff;
+    border-radius:12px;
+    padding:12px 25px;
+    color:#dffaff;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.2s;
+    width:100%;
+}
+
+.reset-btn:hover{ background:rgba(110,243,255,0.2); }
+
+.panel-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    border-bottom:1px dashed #2c5a6e;
+    padding-bottom:15px;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.panel-header h2{
+    color:#6fe3ff;
+    font-size:1.8rem;
+    font-weight:400;
+    letter-spacing:1px;
+}
+
+.panel-badge{
+    background:rgba(255,193,7,0.2);
+    border:1px solid #ffc107;
+    color:#ffd966;
+    padding:8px 16px;
+    border-radius:40px;
+    font-size:0.9rem;
+    font-weight:600;
+}
+
+.advising-badge{
+    background:rgba(111,227,255,0.15);
+    border:1px solid #6fe3ff;
+    color:#b3f0ff;
+    padding:8px 16px;
+    border-radius:40px;
+    font-size:0.9rem;
+    font-weight:600;
+}
+
+.table-container{
+    overflow-x:auto;
+    border-radius:16px;
+    background:rgba(0,20,28,0.6);
+    padding:5px;
+    margin-bottom:40px;
+}
+
+.professors-table{
+    width:100%;
+    border-collapse:collapse;
+    background:rgba(223,250,255,0.1);
+    border-radius:16px;
+    overflow:hidden;
+    min-width:800px;
+}
+
+.professors-table th{
+    background:#0b2a3a;
+    color:#6fe3ff;
+    font-weight:600;
+    padding:15px 12px;
+    text-align:left;
+    border-bottom:3px solid #6fe3ff;
+    font-size:0.95rem;
+}
+
+.professors-table td{
+    padding:15px 12px;
+    color:#dffaff;
+    border-bottom:1px solid rgba(110,243,255,0.2);
+    font-size:0.95rem;
+    vertical-align:middle;
+}
+
+.professors-table tbody tr:hover{
+    background:rgba(110,243,255,0.1);
+    transition:0.2s;
+}
+
+.professor-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:rgba(110,243,255,0.15);
+    border-radius:30px;
+    padding:5px 15px 5px 5px;
+}
+
+.professor-avatar{
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    background:linear-gradient(135deg, #00f2ff, #7f5cff);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#020617;
+    font-weight:600;
+    font-size:0.9rem;
+    flex-shrink:0;
+}
+
+.subject-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+}
+
+.subject-tag{
+    background:rgba(30,167,215,0.2);
+    border:1px solid #1ea7d7;
+    border-radius:20px;
+    padding:4px 10px;
+    font-size:0.8rem;
+    color:#b3e4ff;
+    display:inline-block;
+}
+
+.status-badge{
+    display:inline-block;
+    padding:5px 12px;
+    border-radius:20px;
+    font-size:0.85rem;
+    font-weight:500;
+}
+
+.status-active{
+    background:rgba(40,167,69,0.2);
+    color:#9fdfaf;
+    border:1px solid #28a745;
+}
+
+.status-pending{
+    background:rgba(255,193,7,0.2);
+    color:#ffd966;
+    border:1px solid #ffc107;
+}
+
+.action-btn{
+    background:transparent;
+    border:1px solid #6fe3ff;
+    color:#dffaff;
+    padding:6px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:0.2s;
+    font-size:0.85rem;
+    margin-right:5px;
+}
+
+.action-btn:hover{
+    background:#1ea7d7;
+    color:#00141c;
+}
+
+.action-btn.approve{
+    border-color:#28a745;
+    color:#9fdfaf;
+}
+
+.action-btn.approve:hover{
+    background:#28a745;
+    color:white;
+}
+
+.action-btn.deny{
+    border-color:#ff7b7b;
+    color:#ffb3b3;
+}
+
+.action-btn.deny:hover{
+    background:#c44a4a;
+    color:white;
+}
+
+.empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:#9bbaca;
+}
+
+/* ===== MODALS ===== */
+.modal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    backdrop-filter:blur(5px);
+    z-index:3000;
+    align-items:center;
+    justify-content:center;
+    overflow-y:auto;
+    padding:20px;
+}
+
+.modal.active{ display:flex; }
+
+.modal-content{
+    background:#0c2c3a;
+    border-radius:40px;
+    padding:30px;
+    width:90%;
+    max-width:550px;
+    border:1px solid #1ea7d7;
+    box-shadow:0 30px 40px rgba(0,0,0,0.7);
+    margin:auto;
+}
+
+.modal-content.advising-modal{
+    max-width:800px;
+}
+
+.modal-content h2{
+    color:#6fe3ff;
+    margin-bottom:20px;
+    font-weight:400;
+}
+
+.modal-details{
+    background:rgba(0,0,0,0.3);
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:25px;
+}
+
+.detail-row{
+    display:flex;
+    margin-bottom:12px;
+    border-bottom:1px solid #2c5a6e;
+    padding-bottom:8px;
+    flex-wrap:wrap;
+    gap:8px;
+}
+
+.detail-label{
+    width:140px;
+    color:#a0d0e0;
+    flex-shrink:0;
+}
+
+.detail-value{
+    flex:1;
+    color:#dffaff;
+    font-weight:500;
+    word-break:break-word;
+}
+
+.modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.btn-primary{
+    background:#1ea7d7;
+    border:none;
+    padding:12px 28px;
+    border-radius:40px;
+    font-weight:600;
+    font-size:1rem;
+    color:#00141c;
+    cursor:pointer;
+    transition:0.2s;
+    border:1px solid #6fe3ff;
+}
+
+.btn-primary:hover{
+    background:#6fe3ff;
+    transform:scale(1.02);
+}
+
+.btn-secondary{
+    background:transparent;
+    border:1px solid #6fe3ff;
+    padding:8px 16px;
+    border-radius:30px;
+    color:#dffaff;
+    cursor:pointer;
+    transition:0.2s;
+    font-weight:500;
+}
+
+.btn-secondary:hover{
+    background:#1ea7d7;
+    color:#00141c;
+}
+
+.btn-danger{
+    background:transparent;
+    border:1px solid #ff7b7b;
+    color:#ffb3b3;
+    padding:8px 16px;
+    border-radius:30px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.btn-danger:hover{
+    background:#c44a4a;
+    color:white;
+    border-color:#ff7b7b;
+}
+
+.btn-approve{
+    background:rgba(40,167,69,0.2);
+    border:1px solid #28a745;
+    color:#9fdfaf;
+    padding:10px 24px;
+    border-radius:30px;
+    cursor:pointer;
+    transition:0.2s;
+    font-weight:600;
+}
+
+.btn-approve:hover{
+    background:#28a745;
+    color:white;
+}
+
+.btn-deny{
+    background:rgba(220,70,70,0.2);
+    border:1px solid #ff7b7b;
+    color:#ffb3b3;
+    padding:10px 24px;
+    border-radius:30px;
+    cursor:pointer;
+    transition:0.2s;
+    font-weight:600;
+}
+
+.btn-deny:hover{
+    background:#c44a4a;
+    color:white;
+}
+
+.btn-view{
+    background:transparent;
+    border:1px solid #6fe3ff;
+    color:#dffaff;
+    padding:6px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:0.2s;
+    font-weight:500;
+    font-size:0.85rem;
+}
+
+.btn-view:hover{
+    background:#1ea7d7;
+    color:#00141c;
+}
+
+/* ===== ADVISING SUBJECT EDITOR ===== */
+.advising-subjects-section{
+    background:rgba(0,0,0,0.25);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:18px;
+}
+
+.advising-subjects-section h3{
+    color:#6fe3ff;
+    font-size:1rem;
+    font-weight:500;
+    margin-bottom:12px;
+    letter-spacing:0.5px;
+}
+
+.advising-subject-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:280px;
+    overflow-y:auto;
+    padding-right:4px;
+}
+
+.advising-subject-list::-webkit-scrollbar{ width:4px; }
+.advising-subject-list::-webkit-scrollbar-track{ background:transparent; }
+.advising-subject-list::-webkit-scrollbar-thumb{ background:#2c5a6e; border-radius:4px; }
+
+.advising-subject-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:rgba(30,167,215,0.1);
+    border:1px solid #2c5a6e;
+    border-radius:12px;
+    padding:10px 14px;
+    gap:10px;
+    flex-wrap:wrap;
+    transition:0.2s;
+}
+
+.advising-subject-item:hover{
+    border-color:#6fe3ff;
+    background:rgba(30,167,215,0.18);
+}
+
+.advising-subject-item.ineligible{
+    border-color:#c44a4a;
+    background:rgba(196,74,74,0.1);
+}
+
+.subject-item-info{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    flex:1;
+    min-width:0;
+}
+
+.subject-item-name{
+    color:#dffaff;
+    font-size:0.9rem;
+    font-weight:500;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.subject-item-meta{
+    color:#6fe3ff;
+    font-size:0.75rem;
+}
+
+.subject-item-status{
+    font-size:0.75rem;
+    padding:3px 10px;
+    border-radius:20px;
+    white-space:nowrap;
+    flex-shrink:0;
+}
+
+.subject-item-status.eligible{
+    background:rgba(40,167,69,0.2);
+    color:#9fdfaf;
+    border:1px solid #28a745;
+}
+
+.subject-item-status.ineligible{
+    background:rgba(196,74,74,0.15);
+    color:#ffb3b3;
+    border:1px solid #c44a4a;
+}
+
+.remove-subject-btn{
+    background:transparent;
+    border:1px solid #ff7b7b;
+    color:#ffb3b3;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:0.8rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:0.2s;
+    flex-shrink:0;
+    line-height:1;
+}
+
+.remove-subject-btn:hover{
+    background:#c44a4a;
+    color:white;
+}
+
+.add-subject-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-top:12px;
+    flex-wrap:wrap;
+}
+
+.subject-search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+}
+.subject-search-wrapper input {
+    width: 100%;
+    background: rgba(0,20,28,0.6);
+    border: 1px solid #2c5a6e;
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #dffaff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: 0.2s;
+}
+.subject-search-wrapper input:focus {
+    border-color: #6fe3ff;
+}
+.subject-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #154250;
+    border: 1px solid #3f92b0;
+    border-radius: 10px;
+    margin-top: 4px;
+    z-index: 100;
+    display: none;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+}
+.subject-suggestions.active {
+    display: block;
+}
+.suggestion-item {
+    padding: 10px 14px;
+    color: #dffaff;
+    cursor: pointer;
+    border-bottom: 1px solid #2e5f72;
+    transition: background 0.2s;
+}
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+.suggestion-item:hover {
+    background: #1ea7d7;
+    color: #00141c;
+}
+.suggestion-item .suggestion-code {
+    font-size: 0.8rem;
+    color: #a0e7ff;
+    margin-left: 8px;
+}
+.suggestion-item:hover .suggestion-code {
+    color: #00141c;
+}
+.suggestion-empty {
+    padding: 10px 14px;
+    color: #9bbaca;
+    text-align: center;
+    font-style: italic;
+}
+
+.add-subject-btn{
+    background:rgba(40,167,69,0.2);
+    border:1px solid #28a745;
+    color:#9fdfaf;
+    padding:10px 18px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:0.85rem;
+    font-weight:600;
+    transition:0.2s;
+    white-space:nowrap;
+}
+
+.add-subject-btn:hover{
+    background:#28a745;
+    color:white;
+}
+
+.prereq-warning{
+    background:rgba(255,193,7,0.12);
+    border:1px solid #ffc107;
+    border-radius:10px;
+    padding:10px 14px;
+    color:#ffd966;
+    font-size:0.8rem;
+    margin-top:8px;
+    display:none;
+}
+
+.prereq-warning.visible{ display:block; }
+
+.btn-pdf{
+    background:rgba(111,227,255,0.12);
+    border:1px solid #6fe3ff;
+    color:#b3f0ff;
+    padding:6px 14px;
+    border-radius:20px;
+    cursor:pointer;
+    font-size:0.82rem;
+    font-weight:500;
+    transition:0.2s;
+    white-space:nowrap;
+}
+
+.btn-pdf:hover{
+    background:rgba(111,227,255,0.25);
+    color:#fff;
+}
+
+#sidebarContainer{
+    position:relative;
+    z-index:1002;
+}
+
+/* Navbar approved button */
+.nav-approved-btn {
+    background: none;
+    border: 2px solid #6fe3ff;
+    color: #6fe3ff;
+    font-size: 20px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-right: 15px;
+    transition: 0.2s;
+}
+.nav-approved-btn:hover {
+    background: #1ea7d7;
+    color: #00141c;
+    border-color: #1ea7d7;
+}
+
+/* Approved modal wider */
+.approved-modal-content {
+    max-width: 1000px !important;
+    width: 95%;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:1024px){ nav{ padding:18px 30px; } .hero{ padding:110px 25px 30px; } .main-panel{ padding:25px; } }
+@media (max-width:768px){ nav{ padding:15px 20px; } .hero{ padding:100px 20px 20px; } .main-panel{ padding:20px; } .header-section h1{ font-size:1.8rem; } .panel-header h2{ font-size:1.4rem; } .filter-grid{ grid-template-columns:1fr; gap:12px; } }
+@media (max-width:600px){ nav{ padding:12px 15px; } .hero{ padding:85px 15px 15px; } .main-panel{ padding:16px; } .header-section h1{ font-size:1.4rem; } .panel-header h2{ font-size:1.2rem; } }
+@media (max-width:480px){ nav{ padding:10px 12px; } .menu-btn{ font-size:20px; } .profile{ width:30px; height:30px; } }
+
+@media (max-width:1024px) { .nav-approved-btn { width: 38px; height: 38px; font-size: 18px; } }
+@media (max-width:768px)  { .nav-approved-btn { width: 35px; height: 35px; font-size: 17px; margin-right: 12px; } }
+@media (max-width:600px)  { .nav-approved-btn { width: 32px; height: 32px; font-size: 15px; margin-right: 10px; } }
+@media (max-width:480px)  { .nav-approved-btn { width: 30px; height: 30px; font-size: 14px; margin-right: 8px; } }
+
+@media (max-width:768px){
+    .table-container{ border-radius:12px; }
+    .professors-table{ min-width:650px; }
+    .professors-table th, .professors-table td{ padding:12px 8px; font-size:0.85rem; }
+    .action-btn, .btn-view, .btn-pdf{ padding:4px 8px; font-size:0.75rem; margin-right:3px; margin-bottom:4px; display:inline-block; }
+    .modal-content{ padding:20px; border-radius:28px; width:95%; max-width:95%; }
+    .modal-content.advising-modal{ max-width:95%; }
+    .detail-row{ flex-direction:column; gap:4px; }
+    .detail-label{ width:100%; font-size:0.8rem; }
+    .modal-actions{ justify-content:center; gap:10px; }
+}
+
+@media (max-width:480px){
+    .modal-actions{ flex-direction:column; }
+    .modal-actions button{ width:100%; text-align:center; }
+    .add-subject-row{ flex-direction:column; }
+    .subject-search-wrapper, .add-subject-btn{ width:100%; }
+}
+
+@media (max-width:600px){
+    input, select, button{ font-size:16px; }
+}
+
+/* SweetAlert2 styles and z-index fix */
+.swal2-container {
+    z-index: 10000 !important;
+}
+.swal2-popup{
+    background:#0b2a3a !important;
+    border-radius:22px !important;
+    border:1px solid rgba(110,243,255,0.25) !important;
+}
+.swal2-title{ color:#6ef3ff !important; }
+.swal2-html-container{ color:#dffaff !important; }
+.swal2-confirm{
+    background:linear-gradient(135deg,#00f2ff,#7f5cff) !important;
+    color:#020617 !important;
+    font-weight:600 !important;
+    border-radius:12px !important;
+}
+.swal2-cancel{
+    background:rgba(255,255,255,0.15) !important;
+    color:#dffaff !important;
+    border:2px solid #6ef3ff !important;
+    border-radius:12px !important;
+}
+</style>
+</head>
+<body>
+
+<div id="sidebarContainer"></div>
+
+<nav>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <div style="display: flex; align-items: center;">
+        <button class="nav-approved-btn" onclick="openApprovedAdvisingModal()" title="Approved Advising Forms">
+            <i class="fas fa-check-circle"></i>
+        </button>
+        <div class="profile-wrapper">
+            <div class="profile" onclick="toggleProfileMenu()">
+                <img src="images/profile.png" id="navProfileImage">
+            </div>
+            <div id="profileMenu" class="profile-menu">
+                <a href="admin_profile.html">Edit Profile</a>
+                <a onclick="confirmLogout()">Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="main-panel">
+
+        <div class="header-section">
+            <h1>Professors Monitoring</h1>
+            <p>Manage professor accounts, subject approvals, and student advising</p>
+        </div>
+
+        <!-- SECTION 1: PENDING APPROVALS -->
+        <div class="filter-section">
+            <div class="panel-header">
+                <h2>📋 Pending Approvals</h2>
+                <span class="panel-badge" id="pendingCount">0 pending</span>
+            </div>
+            <div class="filter-grid">
+                <div class="filter-item">
+                    <label>Search</label>
+                    <input type="text" id="subjectSearch" placeholder="Enter name or email..." onkeyup="applyFilters()">
+                </div>
+                <div class="filter-item">
+                    <button class="reset-btn" onclick="resetFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="professors-table">
+                <thead>
+                    <tr>
+                        <th>Professor</th>
+                        <th>Email</th>
+                        <th>Request Type</th>
+                        <th>Date Requested</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingRequestsTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 2: ADVISING REQUESTS -->
+        <div class="filter-section">
+            <div class="panel-header">
+                <h2>📄 Advising Requests</h2>
+                <span class="advising-badge" id="advisingCount">0 requests</span>
+            </div>
+            <div class="filter-grid">
+                <div class="filter-item">
+                    <label>Search Student</label>
+                    <input type="text" id="advisingSearch" placeholder="Enter student name or ID..." onkeyup="applyAdvisingFilters()">
+                </div>
+                <div class="filter-item">
+                    <button class="reset-btn" onclick="resetAdvisingFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="professors-table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Student ID</th>
+                        <th>Course</th>
+                        <th>Current Term</th>
+                        <th>Status</th>
+                        <th>Date Requested</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="advisingRequestsTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 3: ACTIVE PROFESSORS -->
+        <div class="filter-section">
+            <div class="panel-header">
+                <h2>👨‍🏫 Active Professors</h2>
+            </div>
+            <div class="filter-grid">
+                <div class="filter-item">
+                    <label>Search Professor</label>
+                    <input type="text" id="professorSearch" placeholder="Enter professor name..." onkeyup="applyProfessorFilters()">
+                </div>
+                <div class="filter-item">
+                    <button class="reset-btn" onclick="resetProfessorFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="professors-table">
+                <thead>
+                    <tr>
+                        <th>Professor</th>
+                        <th>Email</th>
+                        <th>Username</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="professorsTableBody"></tbody>
+            </table>
+        </div>
+
+    </div>
+</section>
+
+<!-- MODAL: Professor Registration -->
+<div id="professorRequestModal" class="modal">
+    <div class="modal-content">
+        <h2>Professor Registration Details</h2>
+        <div class="modal-details">
+            <div class="detail-row">
+                <span class="detail-label">Professor:</span>
+                <span class="detail-value" id="modalProfessorName">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value" id="modalEmail">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Username:</span>
+                <span class="detail-value" id="modalUsername">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Request Type:</span>
+                <span class="detail-value" id="modalRequestType">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date Requested:</span>
+                <span class="detail-value" id="modalDate">-</span>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeProfessorRequestModal()">Close</button>
+            <button class="btn-approve" id="modalApproveBtn">Approve</button>
+            <button class="btn-deny" id="modalDenyBtn">Deny</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Subject Request -->
+<div id="subjectRequestModal" class="modal">
+    <div class="modal-content">
+        <h2>New Subject Request Details</h2>
+        <div class="modal-details">
+            <div class="detail-row">
+                <span class="detail-label">Professor:</span>
+                <span class="detail-value" id="subjectModalProfessorName">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value" id="subjectModalEmail">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Subject Name:</span>
+                <span class="detail-value" id="subjectModalSubjectName">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Subject Code:</span>
+                <span class="detail-value" id="subjectModalSubjectCode">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Academic Term:</span>
+                <span class="detail-value" id="subjectModalAcademicTerm">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Section:</span>
+                <span class="detail-value" id="subjectModalSection">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Request Type:</span>
+                <span class="detail-value" id="subjectModalRequestType">Subject Addition</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date Requested:</span>
+                <span class="detail-value" id="subjectModalDate">-</span>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeSubjectRequestModal()">Close</button>
+            <button class="btn-approve" id="subjectModalApproveBtn">Approve Subject</button>
+            <button class="btn-deny" id="subjectModalDenyBtn">Deny Subject</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Advising Request Review -->
+<div id="advisingModal" class="modal">
+    <div class="modal-content advising-modal">
+        <h2>📄 Advising Form Review</h2>
+
+        <div class="modal-details">
+            <div class="detail-row">
+                <span class="detail-label">Student Name:</span>
+                <span class="detail-value" id="advModalStudentName">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Student ID:</span>
+                <span class="detail-value" id="advModalStudentId">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Course:</span>
+                <span class="detail-value">Bachelor of Science in Computer Engineering</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Current Term:</span>
+                <span class="detail-value" id="advModalCurrentTerm">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Next Term:</span>
+                <span class="detail-value" id="advModalNextTerm">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date Requested:</span>
+                <span class="detail-value" id="advModalDate">-</span>
+            </div>
+        </div>
+
+        <div style="margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <span style="color:#a0d0e0; font-size:0.9rem;">Submitted PDF:</span>
+            <button class="btn-pdf" id="advModalViewPdfBtn" onclick="viewAdvisingPdf()">
+                📎 View Submitted PDF
+            </button>
+        </div>
+
+        <div class="advising-subjects-section">
+            <h3>✏️ Subjects for Next Term — Edit Before Approving</h3>
+            <div class="advising-subject-list" id="advSubjectList"></div>
+            <div class="add-subject-row">
+                <div class="subject-search-wrapper">
+                    <input type="text" id="addSubjectSearchInput" placeholder="Search for additional subjects..." autocomplete="off">
+                    <div id="subjectSuggestions" class="subject-suggestions"></div>
+                </div>
+                <button class="add-subject-btn" id="addSubjectBtn" onclick="addSubjectFromSearch()">+ Add</button>
+            </div>
+            <div class="prereq-warning" id="prereqWarning"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeAdvisingModal()">Cancel</button>
+            <button class="btn-deny" onclick="denyAdvisingRequest()">✗ Deny</button>
+            <button class="btn-approve" onclick="approveAdvisingRequest()">✓ Approve & Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Approved Advising Forms -->
+<div id="approvedAdvisingModal" class="modal">
+    <div class="modal-content approved-modal-content">
+        <h2>✅ Approved Advising Forms</h2>
+        
+        <div class="filter-section" style="margin-top: 0; padding: 15px;">
+            <div class="filter-grid">
+                <div class="filter-item">
+                    <label>Sort by</label>
+                    <select id="approvedSortSelect" onchange="renderApprovedAdvising()">
+                        <option value="date-desc">Date Approved (Newest)</option>
+                        <option value="date-asc">Date Approved (Oldest)</option>
+                        <option value="term-desc">Academic Term (Newest)</option>
+                        <option value="term-asc">Academic Term (Oldest)</option>
+                        <option value="name-asc">Student Name (A-Z)</option>
+                        <option value="name-desc">Student Name (Z-A)</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Search Student</label>
+                    <input type="text" id="approvedSearch" placeholder="Enter name or ID..." onkeyup="renderApprovedAdvising()">
+                </div>
+                <div class="filter-item">
+                    <button class="reset-btn" onclick="resetApprovedFilters()">Reset Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container" style="margin-bottom: 0;">
+            <table class="professors-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Student ID</th>
+                        <th>Next Term</th>
+                        <th>Subjects</th>
+                        <th>Approved Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="approvedAdvisingTableBody"></tbody>
+            </table>
+        </div>
+        
+        <div class="modal-actions" style="margin-top: 20px;">
+            <button class="btn-secondary" onclick="closeApprovedAdvisingModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+const { createClient } = supabase;
+
+const supabaseClient = createClient(
+    "https://tmyrnjdwaayelrctqppg.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteXJuamR3YWF5ZWxyY3RxcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDgzODEsImV4cCI6MjA4Njg4NDM4MX0.w_DhdLWk4gA-x434kSobbXjG83IXHpakhRsaig-zMpw"
+);
+
+// ==================== AUTH GUARD ====================
+function checkAdminAuth() {
+    const userType = localStorage.getItem('userType');
+    const userId = localStorage.getItem('userId');
+    
+    if (!userId || userId === 'undefined' || userId === 'null' || userType !== 'admin') {
+        // Clear any partial data
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('username');
+        localStorage.removeItem('profileImage');
+        
+        Swal.fire({
+            title: 'Access Denied',
+            text: 'You must be logged in as an administrator to view this page.',
+            icon: 'warning',
+            background: '#0b2a3a',
+            color: '#dffaff',
+            confirmButtonColor: '#00f2ff',
+            confirmButtonText: 'Go to Login',
+            allowOutsideClick: false
+        }).then(() => {
+            window.location.href = 'index.html';
+        });
+        return false;
+    }
+    return true;
+}
+
+// Check authentication immediately
+if (!checkAdminAuth()) {
+    throw new Error('Authentication required');
+}
+
+// ==================== STATE ====================
+let professorRequests = [];
+let subjectRequests   = [];
+let advisingRequests  = [];
+let approvedAdvisingList = [];
+let currentProfessorRequestId = null;
+let currentSubjectRequestId   = null;
+
+let currentAdvisingRequest = null;
+let currentAdvisingStudent = null;
+let advisingEditSubjects   = [];
+let availableNextTermSubs  = [];
+let studentSubjectStatus   = {};
+let subjectSearchTimeout = null;
+
+let currentFilters   = { search: '' };
+let advisingFilters  = { search: '' };
+let professorFilters = { search: '' };
+
+// ==================== SIDEBAR ====================
+fetch("admin_sidebar.html")
+    .then(r => r.text())
+    .then(html => {
+        document.getElementById("sidebarContainer").innerHTML = html;
+        initializeSidebar();
+    });
+
+function initializeSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    if (sidebar && overlay) {
+        window.toggleMenu = function () {
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        };
+        overlay.onclick = toggleMenu;
+    }
+}
+
+// ==================== AUTH ====================
+function confirmLogout() {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out of your account!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#00f2ff',
+        cancelButtonColor: '#ff6b6b',
+        confirmButtonText: 'Yes, logout',
+        cancelButtonText: 'Cancel',
+        background: '#0b2a3a',
+        color: '#dffaff'
+    }).then(result => {
+        if (result.isConfirmed) {
+            ['userId','userType','username','profileImage','adminId','adminEmail','adminUsername','adminProfileImage'].forEach(k => localStorage.removeItem(k));
+            Swal.fire({ title: 'Logged Out!', icon: 'success', confirmButtonColor: '#00f2ff', background: '#0b2a3a', color: '#dffaff' })
+                .then(() => window.location.href = 'index.html');
+        }
+    });
+}
+
+function toggleProfileMenu() {
+    document.getElementById("profileMenu").classList.toggle("active");
+}
+
+document.addEventListener("click", e => {
+    const profile = document.querySelector(".profile");
+    const menu    = document.getElementById("profileMenu");
+    if (profile && !profile.contains(e.target) && menu && !menu.contains(e.target)) {
+        menu.classList.remove("active");
+    }
+});
+
+// ==================== HELPERS ====================
+function getDescriptiveAcademicTerm(acadTerm) {
+    if (!acadTerm) return 'Not specified';
+    const [year, term] = acadTerm.split('-');
+    const termText = term === '1' ? 'First Semester' : term === '2' ? 'Second Semester' : 'Summer';
+    const years = { '1': '1st Year', '2': '2nd Year', '3': '3rd Year', '4': '4th Year' };
+    return `${years[year] || year} - ${termText}`;
+}
+
+function getNextAcademicTerm(currentTerm) {
+    if (!currentTerm) return null;
+    const [y, s] = currentTerm.split('-');
+    const year = parseInt(y);
+    if (s === '1') return `${year}-2`;
+    if (s === '2') return `${year + 1}-1`;
+    if (s === 'S' || s === 's') return `${year + 1}-1`;
+    return null;
+}
+
+function formatDateDisplay(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
+// ==================== PROFESSOR REQUESTS ====================
+async function fetchProfessorRequests() {
+    const { data, error } = await supabaseClient.from('requests_professor').select('*').order('date_time', { ascending: false });
+    return error ? [] : (data || []);
+}
+
+async function fetchSubjectRequests() {
+    const { data, error } = await supabaseClient.from('requests_subject').select('*').order('date_time', { ascending: false });
+    return error ? [] : (data || []);
+}
+
+async function getProfessorDetails(uid) {
+    const { data, error } = await supabaseClient.from('professor').select('fname, lname, email').eq('uid', uid).single();
+    return error ? null : data;
+}
+
+async function renderPendingRequests() {
+    const tbody = document.getElementById('pendingRequestsTableBody');
+    const [professorReqs, subjectReqs] = await Promise.all([fetchProfessorRequests(), fetchSubjectRequests()]);
+    professorRequests = professorReqs;
+    subjectRequests   = subjectReqs;
+
+    let allRequests = [];
+    professorRequests.forEach(req => {
+        allRequests.push({
+            uniqueId: `prof_${req.uid}`, requestType: 'professor_registration', originalId: req.uid,
+            professorName: `${req.lname || ''}, ${req.fname || ''}`, firstName: req.fname, lastName: req.lname,
+            email: req.email, username: req.uname, date: req.date_time, originalRequest: req
+        });
+    });
+
+    for (const req of subjectRequests) {
+        const profDetails = await getProfessorDetails(req.uid);
+        allRequests.push({
+            uniqueId: `subj_${req.id}`, requestType: 'subject_request', originalId: req.id,
+            professorName: profDetails ? `${profDetails.lname}, ${profDetails.fname}` : 'Unknown Professor',
+            firstName: profDetails?.fname, lastName: profDetails?.lname, email: profDetails?.email || '',
+            subjectName: req.sub, subjectCode: req.sub_code, academicTerm: req.acad_term,
+            descriptiveTerm: getDescriptiveAcademicTerm(req.acad_term), section: req.section,
+            profName: req.prof_name, date: req.date_time, originalRequest: req
+        });
+    }
+
+    allRequests.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let filtered = allRequests.filter(item => {
+        if (!currentFilters.search) return true;
+        const s = currentFilters.search.toLowerCase();
+        return (item.professorName || '').toLowerCase().includes(s) || (item.email || '').toLowerCase().includes(s);
+    });
+
+    document.getElementById('pendingCount').textContent = `${filtered.length} pending`;
+
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div style="font-size:3rem;opacity:0.5;margin-bottom:15px;">📋</div><h3 style="color:#6fe3ff;margin-bottom:8px;">No pending approvals</h3><p style="color:#9bbaca;">No pending requests found</p></div></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = '';
+    filtered.forEach(item => {
+        const row = document.createElement('tr');
+        if (item.requestType === 'subject_request') {
+            let sectionTag = item.section ? `<span class="subject-tag" style="margin-left:5px;">${item.section === 'Any' ? 'Any Set' : item.section.slice(-1)}</span>` : '';
+            row.innerHTML = `
+                <td><div class="professor-badge"><div class="professor-avatar">${(item.firstName||'')[0]}${(item.lastName||'')[0]}</div>${item.professorName}</div></td>
+                <td>${item.email}</td>
+                <td><span class="subject-tag" style="background:rgba(255,193,7,0.2);border-color:#ffc107;">📚 New Subject: ${item.subjectName||''}</span>${sectionTag}</td>
+                <td>${formatDateDisplay(item.date)}</td>
+                <td>
+                    <button class="btn-view" onclick="viewSubjectRequestDetails(${item.originalId})">View</button>
+                    <button class="action-btn approve" onclick="approveSubjectRequest(${item.originalId})">✓</button>
+                    <button class="action-btn deny" onclick="denySubjectRequest(${item.originalId})">✗</button>
+                </td>`;
+        } else {
+            row.innerHTML = `
+                <td><div class="professor-badge"><div class="professor-avatar">${(item.firstName||'')[0]}${(item.lastName||'')[0]}</div>${item.professorName}</div></td>
+                <td>${item.email}</td>
+                <td><span class="subject-tag" style="background:rgba(0,123,255,0.2);border-color:#007bff;">👤 New Professor Account</span></td>
+                <td>${formatDateDisplay(item.date)}</td>
+                <td>
+                    <button class="btn-view" onclick="viewProfessorRequestDetails('${item.originalId}')">View</button>
+                    <button class="action-btn approve" onclick="approveProfessorRequest('${item.originalId}')">✓</button>
+                    <button class="action-btn deny" onclick="denyProfessorRequest('${item.originalId}')">✗</button>
+                </td>`;
+        }
+        tbody.appendChild(row);
+    });
+}
+
+// ==================== ADVISING REQUESTS ====================
+async function fetchAdvisingRequests() {
+    const { data, error } = await supabaseClient
+        .from('request_advising')
+        .select('*')
+        .order('created_at', { ascending: false });
+    return error ? [] : (data || []);
+}
+
+async function getStudentDetails(studentId) {
+    if (!studentId) return null;
+    const { data, error } = await supabaseClient
+        .from('student')
+        .select('id, fname, lname, "year-section"')
+        .eq('id', studentId)
+        .maybeSingle();
+    if (error) { console.error('❌ Supabase error:', error.message); return null; }
+    return data;
+}
+
+async function getStudentCurrentTerm(studentId) {
+    const { data: enrollments, error } = await supabaseClient
+        .from('enrollment_sub')
+        .select('subjects:sub_id(academic_term)')
+        .eq('stud_id', studentId);
+    if (error || !enrollments) return null;
+    const terms = new Set();
+    enrollments.forEach(e => { if (e.subjects?.academic_term) terms.add(e.subjects.academic_term); });
+    if (!terms.size) return null;
+    const sorted = Array.from(terms).sort((a, b) => {
+        const pa = parseTermForSorting(a), pb = parseTermForSorting(b);
+        if (pb.year !== pa.year) return pb.year - pa.year;
+        return pb.semesterValue - pa.semesterValue;
+    });
+    return sorted[0];
+}
+
+function parseTermForSorting(term) {
+    const parts = term.split('-');
+    if (parts.length === 2) {
+        const year = parseInt(parts[0]) || 0;
+        const s = parts[1];
+        let semesterValue = s === '1' ? 1 : s === '2' ? 2 : (s === 'S' || s === 's') ? 3 : 0;
+        return { year, semesterValue };
+    }
+    return { year: 0, semesterValue: 0 };
+}
+
+async function renderAdvisingRequests() {
+    const tbody = document.getElementById('advisingRequestsTableBody');
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#6fe3ff;">Loading...</td></tr>`;
+
+    advisingRequests = await fetchAdvisingRequests();
+
+    let enriched = [];
+    for (const req of advisingRequests) {
+        const student = await getStudentDetails(req.student_id);
+        const currentTerm = await getStudentCurrentTerm(req.student_id);
+        enriched.push({ req, student, currentTerm });
+    }
+
+    let filtered = enriched.filter(({ req, student }) => {
+        if (!advisingFilters.search) return true;
+        const s = advisingFilters.search.toLowerCase();
+        const name = student ? `${student.fname} ${student.lname}`.toLowerCase() : '';
+        const id   = String(req.student_id || '').toLowerCase();
+        return name.includes(s) || id.includes(s);
+    });
+
+    document.getElementById('advisingCount').textContent = `${filtered.length} request${filtered.length !== 1 ? 's' : ''}`;
+
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div style="font-size:3rem;opacity:0.5;margin-bottom:15px;">📄</div><h3 style="color:#6fe3ff;margin-bottom:8px;">No advising requests</h3><p style="color:#9bbaca;">Students haven't submitted any advising forms yet</p></div></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = '';
+    filtered.forEach(({ req, student, currentTerm }) => {
+        const firstName = student?.fname || '', lastName = student?.lname || '';
+        const fullName = (firstName || lastName) ? `${lastName}, ${firstName}`.trim().replace(/^,\s*/, '').replace(/,\s*$/, '') : `ID: ${req.student_id}`;
+        const initials = `${(firstName[0] || '?')}${(lastName[0] || '?')}`.toUpperCase();
+        const termDisplay = currentTerm ? getDescriptiveAcademicTerm(currentTerm) : '—';
+        const courseDisplay = 'BSCPE';
+        const yearSection = student?.['year-section'] || '—';
+        const row = document.createElement('tr');
+        row.dataset.currentTerm = currentTerm || '';
+        row.innerHTML = `
+            <td><div class="professor-badge"><div class="professor-avatar">${initials}</div>${fullName}</div></td>
+            <td>${req.student_id}</td>
+            <td>${courseDisplay} ${yearSection !== '—' ? `(${yearSection})` : ''}</td>
+            <td>${termDisplay}</td>
+            <td><span class="status-badge status-pending">Pending</span></td>
+            <td>${formatDateDisplay(req.created_at)}</td>
+            <td>
+                <button class="btn-view" onclick="openAdvisingModal('${req.id}', '${currentTerm || ''}')">Review</button>
+                <button class="action-btn deny" onclick="quickDenyAdvising('${req.id}')">✗ Deny</button>
+             </td>`;
+        tbody.appendChild(row);
+    });
+}
+
+// ==================== ADVISING MODAL ====================
+async function openAdvisingModal(requestId, currentTermParam) {
+    currentAdvisingRequest = advisingRequests.find(r => String(r.id) === String(requestId));
+    if (!currentAdvisingRequest) return;
+
+    currentAdvisingStudent = await getStudentDetails(currentAdvisingRequest.student_id);
+
+    const currentTerm = currentTermParam || await getStudentCurrentTerm(currentAdvisingRequest.student_id) || '';
+    currentAdvisingRequest._resolvedCurrentTerm = currentTerm;
+
+    const firstName = currentAdvisingStudent?.fname || '', lastName = currentAdvisingStudent?.lname || '';
+    const fullName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : `Student ID: ${currentAdvisingRequest.student_id}`;
+    document.getElementById('advModalStudentName').textContent = fullName;
+    document.getElementById('advModalStudentId').textContent = currentAdvisingRequest.student_id;
+    document.getElementById('advModalDate').textContent = formatDateDisplay(currentAdvisingRequest.created_at);
+
+    const nextTerm = getNextAcademicTerm(currentTerm);
+    document.getElementById('advModalCurrentTerm').textContent = currentTerm ? getDescriptiveAcademicTerm(currentTerm) : '—';
+    document.getElementById('advModalNextTerm').textContent = nextTerm ? getDescriptiveAcademicTerm(nextTerm) : '—';
+
+    await loadStudentSubjectStatus(currentAdvisingRequest.student_id);
+    await loadNextTermSubjects(nextTerm);
+    await buildInitialSubjectList(nextTerm);
+
+    setupSubjectSearchInput();
+    renderAdvisingSubjectList();
+
+    document.getElementById('prereqWarning').classList.remove('visible');
+    document.getElementById('advisingModal').classList.add('active');
+}
+
+function closeAdvisingModal() {
+    document.getElementById('advisingModal').classList.remove('active');
+    currentAdvisingRequest = null;
+    currentAdvisingStudent = null;
+    advisingEditSubjects = [];
+    availableNextTermSubs = [];
+    studentSubjectStatus = {};
+}
+
+async function loadStudentSubjectStatus(studentId) {
+    studentSubjectStatus = {};
+
+    // 1. Fetch active enrollments (from enrollment_sub + subjects)
+    const { data: activeEnrollments, error: activeError } = await supabaseClient
+        .from('enrollment_sub')
+        .select('grades, subjects:sub_id(sub)')
+        .eq('stud_id', studentId);
+
+    if (activeError) {
+        console.error('Error fetching active enrollments for status:', activeError);
+    }
+
+    // Process active enrollments
+    if (activeEnrollments) {
+        activeEnrollments.forEach(e => {
+            const subName = e.subjects?.sub;
+            if (!subName) return;
+            const grade = e.grades;
+            let status = 'no_grade';
+            if (grade && grade !== '') {
+                const n = parseFloat(grade);
+                if (n >= 75) status = 'passed';
+                else if (n > 0) status = 'failed';
+            }
+            studentSubjectStatus[subName] = { status, grade };
+        });
+    }
+
+    // 2. Fetch archived records from subject_mirror
+    const { data: mirrorRecords, error: mirrorError } = await supabaseClient
+        .from('subject_mirror')
+        .select('subject, grade')
+        .eq('student_id', studentId);
+
+    if (mirrorError) {
+        console.error('Error fetching subject_mirror for status:', mirrorError);
+    }
+
+    // Process mirror records only if subject not already known from active enrollments
+    if (mirrorRecords) {
+        mirrorRecords.forEach(record => {
+            const subName = record.subject;
+            if (!subName || studentSubjectStatus.hasOwnProperty(subName)) return;
+            const grade = record.grade;
+            let status = 'no_grade';
+            if (grade && grade !== '') {
+                const n = parseFloat(grade);
+                if (n >= 75) status = 'passed';
+                else if (n > 0) status = 'failed';
+            }
+            studentSubjectStatus[subName] = { status, grade };
+        });
+    }
+}
+
+async function loadNextTermSubjects(nextTerm) {
+    availableNextTermSubs = [];
+    if (!nextTerm) return;
+    const { data, error } = await supabaseClient
+        .from('list_of_subs')
+        .select('*')
+        .eq('academic-term', nextTerm);
+    if (error) {
+        console.error('Error loading subjects:', error);
+        return;
+    }
+    availableNextTermSubs = data || [];
+}
+
+async function buildInitialSubjectList(nextTerm) {
+    advisingEditSubjects = [];
+    if (!nextTerm) return;
+
+    let yearLevel = 1;
+    if (currentAdvisingStudent && currentAdvisingStudent['year-section']) {
+        yearLevel = parseInt(currentAdvisingStudent['year-section'].split('-')[0]) || 1;
+    }
+
+    for (const sub of availableNextTermSubs) {
+        const eligibility = checkEligibility(sub, yearLevel);
+        advisingEditSubjects.push({
+            code: sub.code || 'N/A',
+            title: sub.subject,
+            units: sub.units || 0,
+            eligible: eligibility.eligible,
+            missingPrereqs: eligibility.missing
+        });
+    }
+}
+
+function checkEligibility(sub, yearLevel) {
+    const prereqs = sub.prerequisite || [];
+    const missing = [];
+    if (!prereqs.length) return { eligible: true, missing: [] };
+    for (const prereq of prereqs) {
+        const yearMatch = String(prereq).match(/(\d+)(?:st|nd|rd|th)?\s*(?:yr|year)/i);
+        if (yearMatch) {
+            const reqYear = parseInt(yearMatch[1]);
+            if (yearLevel < reqYear) missing.push(`Year standing: ${prereq}`);
+            continue;
+        }
+        const status = studentSubjectStatus[prereq] ? studentSubjectStatus[prereq].status : 'not_taken';
+        if (status !== 'passed') missing.push(`${prereq} (${status === 'not_taken' ? 'not taken' : status})`);
+    }
+    return { eligible: missing.length === 0, missing };
+}
+
+function renderAdvisingSubjectList() {
+    const list = document.getElementById('advSubjectList');
+    if (!advisingEditSubjects.length) {
+        list.innerHTML = `<div style="text-align:center;color:#6fe3ff;padding:20px;font-size:0.9rem;opacity:0.7;">No subjects added yet.</div>`;
+        return;
+    }
+    list.innerHTML = '';
+    advisingEditSubjects.forEach((sub, idx) => {
+        const item = document.createElement('div');
+        item.className = `advising-subject-item${sub.eligible ? '' : ' ineligible'}`;
+        const missingHtml = !sub.eligible && sub.missingPrereqs.length
+            ? `<span style="color:#ffb3b3;font-size:0.72rem;">⚠ Missing: ${sub.missingPrereqs.join(', ')}</span>`
+            : '';
+        item.innerHTML = `
+            <div class="subject-item-info">
+                <span class="subject-item-name" title="${sub.title}">${sub.title}</span>
+                <span class="subject-item-meta">${sub.code} &nbsp;|&nbsp; ${sub.units} unit${sub.units !== 1 ? 's' : ''}</span>
+                ${missingHtml}
+            </div>
+            <span class="subject-item-status ${sub.eligible ? 'eligible' : 'ineligible'}">
+                ${sub.eligible ? '✓ Eligible' : '✗ Not Eligible'}
+            </span>
+            <button class="remove-subject-btn" onclick="removeAdvisingSubject(${idx})" title="Remove">✕</button>`;
+        list.appendChild(item);
+    });
+}
+
+// ===== SUBJECT SEARCH =====
+async function searchSubjectsFromDatabase(query) {
+    if (!query || query.trim().length === 0) return [];
+    try {
+        const { data, error } = await supabaseClient
+            .from('list_of_subs')
+            .select('subject, code, units, prerequisite, academic-term')
+            .ilike('subject', `%${query}%`)
+            .order('subject')
+            .limit(15);
+        if (error) throw error;
+        return data || [];
+    } catch (err) {
+        console.error('Error searching subjects:', err);
+        return [];
+    }
+}
+
+function setupSubjectSearchInput() {
+    const searchInput = document.getElementById('addSubjectSearchInput');
+    const suggestionsDiv = document.getElementById('subjectSuggestions');
+    
+    searchInput.removeEventListener('input', handleSubjectSearch);
+    searchInput.removeEventListener('focus', handleSubjectSearch);
+    searchInput.addEventListener('input', handleSubjectSearch);
+    searchInput.addEventListener('focus', handleSubjectSearch);
+    
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            suggestionsDiv.classList.remove('active');
+        }
+    });
+}
+
+async function handleSubjectSearch() {
+    const searchInput = document.getElementById('addSubjectSearchInput');
+    const suggestionsDiv = document.getElementById('subjectSuggestions');
+    const query = searchInput.value.trim();
+    
+    if (subjectSearchTimeout) clearTimeout(subjectSearchTimeout);
+    
+    if (query.length === 0) {
+        suggestionsDiv.innerHTML = '';
+        suggestionsDiv.classList.remove('active');
+        return;
+    }
+    
+    suggestionsDiv.innerHTML = '<div class="suggestion-empty">Searching...</div>';
+    suggestionsDiv.classList.add('active');
+    
+    subjectSearchTimeout = setTimeout(async () => {
+        const results = await searchSubjectsFromDatabase(query);
+        if (results.length === 0) {
+            suggestionsDiv.innerHTML = '<div class="suggestion-empty">No subjects found</div>';
+            return;
+        }
+        suggestionsDiv.innerHTML = '';
+        results.forEach(sub => {
+            if (advisingEditSubjects.some(s => s.title === sub.subject)) return;
+            
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.innerHTML = `${sub.subject} <span class="suggestion-code">${sub.code || ''}</span>`;
+            item.addEventListener('click', () => selectSubjectFromSearch(sub));
+            suggestionsDiv.appendChild(item);
+        });
+        if (suggestionsDiv.children.length === 0) {
+            suggestionsDiv.innerHTML = '<div class="suggestion-empty">All matching subjects already added</div>';
+        }
+    }, 300);
+}
+
+function selectSubjectFromSearch(subject) {
+    const searchInput = document.getElementById('addSubjectSearchInput');
+    const suggestionsDiv = document.getElementById('subjectSuggestions');
+    searchInput.value = subject.subject;
+    suggestionsDiv.classList.remove('active');
+    addSubjectToAdvisingWithData(subject);
+}
+
+function addSubjectToAdvisingWithData(subData) {
+    if (!subData) return;
+    let yearLevel = 1;
+    if (currentAdvisingStudent && currentAdvisingStudent['year-section']) {
+        yearLevel = parseInt(currentAdvisingStudent['year-section'].split('-')[0]) || 1;
+    }
+    const eligibility = checkEligibility(subData, yearLevel);
+    if (!eligibility.eligible) {
+        const warn = document.getElementById('prereqWarning');
+        warn.textContent = `⚠ Prerequisite warning for "${subData.subject}": ${eligibility.missing.join('; ')}. You can still add it, but the student does not meet the requirements.`;
+        warn.classList.add('visible');
+    } else {
+        document.getElementById('prereqWarning').classList.remove('visible');
+    }
+    advisingEditSubjects.push({
+        code: subData.code || 'N/A',
+        title: subData.subject,
+        units: subData.units || 0,
+        eligible: eligibility.eligible,
+        missingPrereqs: eligibility.missing
+    });
+    document.getElementById('addSubjectSearchInput').value = '';
+    renderAdvisingSubjectList();
+    document.getElementById('subjectSuggestions').classList.remove('active');
+}
+
+window.addSubjectFromSearch = function() {
+    const searchInput = document.getElementById('addSubjectSearchInput');
+    searchInput.focus();
+};
+
+function removeAdvisingSubject(idx) {
+    advisingEditSubjects.splice(idx, 1);
+    renderAdvisingSubjectList();
+    document.getElementById('prereqWarning').classList.remove('visible');
+}
+
+// View PDF
+async function viewAdvisingPdf() {
+    if (!currentAdvisingRequest) return;
+    const studentId = currentAdvisingRequest.student_id;
+    const rawTerm   = currentAdvisingRequest._resolvedCurrentTerm || '';
+    if (!rawTerm) {
+        Swal.fire({ title: 'Term Unknown', text: 'Could not determine the academic term for this request.', icon: 'warning', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+        return;
+    }
+    const fileName = `${rawTerm}.pdf`;
+    const filePath = `ADVISING/${studentId}/${fileName}`;
+    try {
+        const { data, error } = await supabaseClient.storage.from('documents').download(filePath);
+        if (error) {
+            Swal.fire({ title: 'PDF Not Found', text: `File not found at path: ${filePath}\n(${error.message})`, icon: 'warning', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+            return;
+        }
+        const url = URL.createObjectURL(data);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 15000);
+    } catch (e) {
+        Swal.fire({ title: 'Error', text: 'Failed to load PDF: ' + e.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+    }
+}
+
+async function generateAndUploadAdvisingPDF(studentId, currentTerm, nextTerm, subjects) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+    const W = pdf.internal.pageSize.getWidth();
+    const H = pdf.internal.pageSize.getHeight();
+    const margin = 40;
+    const usable = W - margin * 2;
+
+    const logoSize = 45;
+    const rightReserved = logoSize + 20;
+    const textAreaWidth = W - margin * 2 - rightReserved;
+    const textCenterX = margin + textAreaWidth / 2;
+
+    let y = margin + 10;
+
+    const student = await getStudentDetails(studentId);
+    const studentName = student ? `${student.fname} ${student.lname}` : `ID: ${studentId}`;
+    const yearSection = student?.['year-section'] || 'N/A';
+
+    const currentTermFormatted = currentTerm ? getDescriptiveAcademicTerm(currentTerm) : 'Unknown';
+    const nextTermFormatted = nextTerm ? getDescriptiveAcademicTerm(nextTerm) : 'Next Term';
+    const approvedAt = new Date();
+    const approvedDateStr = approvedAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const approvedTimeStr = approvedAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    const logoUrl = supabaseClient.storage.from('documents').getPublicUrl('csulogo.png').data.publicUrl;
+
+    let logoBase64 = null;
+    try {
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        logoBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.warn('Could not load logo, continuing without it.', e);
+    }
+
+    if (logoBase64) {
+        try {
+            pdf.addImage(logoBase64, 'PNG', W - margin - logoSize, y - 5, logoSize, logoSize);
+        } catch (e) {
+            console.warn('Failed to add logo image', e);
+        }
+    }
+
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(13);
+    pdf.setTextColor(0, 43, 54);
+    pdf.text('Republic of the Philippines', textCenterX, y, { align: 'center' }); y += 18;
+    pdf.setFontSize(12);
+    pdf.text('Cagayan State University', textCenterX, y, { align: 'center' }); y += 15;
+    pdf.setFont('times', 'italic');
+    pdf.setFontSize(10);
+    pdf.setTextColor(29, 91, 112);
+    pdf.text('CARIG CAMPUS  |  Carig Sur, Tuguegarao City', textCenterX, y, { align: 'center' }); y += 10;
+
+    pdf.setDrawColor(10, 59, 75);
+    pdf.setLineWidth(1.5);
+    pdf.line(margin, y, W - margin, y); y += 18;
+
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(14);
+    pdf.setTextColor(0, 43, 54);
+    pdf.text('ACADEMIC ADVISING FORM', W / 2, y, { align: 'center' });
+    const titleW = pdf.getTextWidth('ACADEMIC ADVISING FORM');
+    pdf.setLineWidth(0.8);
+    pdf.line((W - titleW) / 2, y + 2, (W + titleW) / 2, y + 2);
+    y += 22;
+
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(11);
+    pdf.text('STUDENT INFORMATION:', margin, y); y += 14;
+
+    const infoRows = [
+        ['Student Name:', studentName],
+        ['Student ID:', studentId],
+        ['Course:', 'Bachelor of Science in Computer Engineering'],
+        ['Year & Section:', yearSection],
+        ['Current Term:', currentTermFormatted],
+        ['Next Term:', nextTermFormatted],
+    ];
+    pdf.setFontSize(10);
+    infoRows.forEach(([label, value]) => {
+        pdf.setFont('times', 'bold');
+        pdf.text(label, margin, y);
+        pdf.setFont('times', 'normal');
+        pdf.text(value, margin + 130, y);
+        y += 14;
+    });
+    y += 8;
+
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(11);
+    pdf.setTextColor(29, 91, 112);
+    pdf.text('APPROVED SUBJECTS FOR NEXT TERM', margin, y); y += 12;
+
+    const colX = [margin, margin + 80, margin + usable - 80];
+    const colW = [80, usable - 160, 80];
+    const headers = ['CODE', 'DESCRIPTIVE TITLE', 'UNITS'];
+    const rowH = 18;
+
+    pdf.setFillColor(194, 224, 234);
+    pdf.rect(margin, y, usable, rowH, 'F');
+    pdf.setDrawColor(27, 78, 95);
+    pdf.rect(margin, y, usable, rowH, 'S');
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    headers.forEach((h, i) => pdf.text(h, colX[i] + colW[i] / 2, y + 12, { align: 'center' }));
+    y += rowH;
+
+    pdf.setFont('times', 'normal');
+    subjects.forEach((sub, idx) => {
+        if (y + rowH > H - margin) {
+            pdf.addPage();
+            pdf.setFillColor(255, 255, 255);
+            pdf.rect(0, 0, W, H, 'F');
+            pdf.setTextColor(60, 60, 60);
+            y = margin;
+        }
+        if (idx % 2 === 1) {
+            pdf.setFillColor(240, 248, 251);
+            pdf.rect(margin, y, usable, rowH, 'F');
+        }
+        pdf.setDrawColor(27, 78, 95);
+        pdf.rect(margin, y, usable, rowH, 'S');
+        pdf.setFontSize(9);
+        pdf.setTextColor(0, 44, 56);
+        pdf.text(String(sub.code), colX[0] + 2, y + 12);
+        pdf.text(String(sub.title), colX[1] + 2, y + 12);
+        pdf.text(String(sub.units), colX[2] + colW[2] / 2, y + 12, { align: 'center' });
+        y += rowH;
+    });
+
+    if (y + rowH > H - margin) {
+        pdf.addPage();
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, 0, W, H, 'F');
+        pdf.setTextColor(2, 33, 43);
+        y = margin;
+    }
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(margin, y, usable, rowH, 'F');
+    pdf.setDrawColor(27, 78, 95);
+    pdf.rect(margin, y, usable, rowH, 'S');
+    pdf.setFont('times', 'italic');
+    pdf.setFontSize(9);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('---End of Approved Subjects---', W / 2, y + 12, { align: 'center' });
+    y += rowH + 10;
+
+    pdf.setFont('times', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(80, 80, 80);
+    pdf.text(`Approved on: ${approvedDateStr} at ${approvedTimeStr}`, W - margin, y, { align: 'right' });
+    y += 20;
+
+    pdf.setGState(new pdf.GState({ opacity: 0.06 }));
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(52);
+    pdf.setTextColor(100, 100, 100);
+    const centerX = W / 2;
+    const centerY = H / 2;
+    pdf.text('Generated by adv-attendify.org', centerX, centerY, {
+        align: 'center',
+        angle: 25
+    });
+    pdf.setGState(new pdf.GState({ opacity: 1 }));
+
+    const pdfBlob = pdf.output('blob');
+    
+    const sanitizedStudentId = studentId.replace(/-/g, '_');
+    const fileName = `${currentTerm}.pdf`;
+    const filePath = `ADVISING/${sanitizedStudentId}/${fileName}`;
+    
+    await supabaseClient.storage.from('documents').remove([filePath]).catch(() => {});
+    const { error: uploadError } = await supabaseClient.storage
+        .from('documents')
+        .upload(filePath, pdfBlob, {
+            contentType: 'application/pdf',
+            upsert: true
+        });
+    
+    if (uploadError) throw uploadError;
+}
+
+// ==================== APPROVE ADVISING ====================
+async function approveAdvisingRequest() {
+    if (!currentAdvisingRequest) return;
+    
+    const eligibleSubjects = advisingEditSubjects.filter(s => s.eligible);
+    if (eligibleSubjects.length === 0) {
+        Swal.fire({
+            title: 'No Eligible Subjects',
+            text: 'There are no eligible subjects to approve. Please add at least one eligible subject.',
+            icon: 'warning',
+            background: '#0b2a3a',
+            color: '#dffaff',
+            confirmButtonColor: '#00f2ff'
+        });
+        return;
+    }
+
+    const ineligibleCount = advisingEditSubjects.filter(s => !s.eligible).length;
+    let proceed = true;
+    if (ineligibleCount > 0) {
+        const res = await Swal.fire({
+            title: 'Ineligible Subjects Will Be Excluded',
+            html: `<span style="color:#ffd966">${ineligibleCount} ineligible subject(s) will NOT be saved in the approved form.</span><br><br>Do you want to continue?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, approve eligible only',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            background: '#0b2a3a',
+            color: '#dffaff'
+        });
+        proceed = res.isConfirmed;
+    } else {
+        const res = await Swal.fire({
+            title: 'Approve Advising Form?',
+            text: `Approve advising for ${document.getElementById('advModalStudentName').textContent} with ${eligibleSubjects.length} eligible subject(s)?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, approve',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            background: '#0b2a3a',
+            color: '#dffaff'
+        });
+        proceed = res.isConfirmed;
+    }
+    if (!proceed) return;
+
+    try {
+        const studentId = currentAdvisingRequest.student_id;
+        const currentTerm = currentAdvisingRequest._resolvedCurrentTerm || '';
+        const nextTerm = getNextAcademicTerm(currentTerm) || '';
+
+        const subjectsPayload = eligibleSubjects.map(s => ({
+            code: s.code,
+            title: s.title,
+            units: s.units
+        }));
+
+        await generateAndUploadAdvisingPDF(studentId, currentTerm, nextTerm, eligibleSubjects);
+
+        const { data: maxIdData, error: maxIdError } = await supabaseClient
+            .from('advising')
+            .select('id')
+            .order('id', { ascending: false })
+            .limit(1);
+        
+        let nextId = 1;
+        if (!maxIdError && maxIdData && maxIdData.length > 0) {
+            nextId = (maxIdData[0].id || 0) + 1;
+        }
+
+        const { error: insertErr } = await supabaseClient
+            .from('advising')
+            .insert([{
+                id: nextId,
+                student_id: studentId,
+                academic_term: nextTerm,
+                subjects: subjectsPayload,
+                approved_at: new Date().toISOString()
+            }]);
+
+        if (insertErr) throw insertErr;
+
+        const { error: deleteErr } = await supabaseClient
+            .from('request_advising')
+            .delete()
+            .eq('id', currentAdvisingRequest.id);
+
+        if (deleteErr) throw deleteErr;
+
+        closeAdvisingModal();
+        await renderAdvisingRequests();
+        await fetchAndRenderApprovedAdvising();
+
+        Swal.fire({
+            title: 'Approved!',
+            text: 'Advising form has been approved and the PDF has been updated.',
+            icon: 'success',
+            timer: 3000,
+            showConfirmButton: false,
+            background: '#0b2a3a',
+            color: '#dffaff'
+        });
+    } catch (e) {
+        console.error(e);
+        Swal.fire({ title: 'Error', text: 'Failed to approve: ' + e.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+    }
+}
+
+// ==================== APPROVED ADVISING FUNCTIONS ====================
+async function fetchApprovedAdvising() {
+    const { data, error } = await supabaseClient
+        .from('advising')
+        .select('*')
+        .order('approved_at', { ascending: false });
+    if (error) {
+        console.error('Error fetching approved advising:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function renderApprovedAdvising() {
+    const tbody = document.getElementById('approvedAdvisingTableBody');
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#6fe3ff;">Loading...</td></tr>`;
+
+    approvedAdvisingList = await fetchApprovedAdvising();
+
+    let enriched = [];
+    for (const adv of approvedAdvisingList) {
+        const student = await getStudentDetails(adv.student_id);
+        enriched.push({ ...adv, student });
+    }
+
+    const searchTerm = document.getElementById('approvedSearch')?.value.trim().toLowerCase() || '';
+    let filtered = enriched.filter(item => {
+        if (!searchTerm) return true;
+        const name = item.student ? `${item.student.fname} ${item.student.lname}`.toLowerCase() : '';
+        const id = String(item.student_id || '').toLowerCase();
+        return name.includes(searchTerm) || id.includes(searchTerm);
+    });
+
+    const sortOption = document.getElementById('approvedSortSelect')?.value || 'date-desc';
+    filtered.sort((a, b) => {
+        switch(sortOption) {
+            case 'date-asc': return new Date(a.approved_at) - new Date(b.approved_at);
+            case 'date-desc': return new Date(b.approved_at) - new Date(a.approved_at);
+            case 'term-asc': return (a.academic_term || '').localeCompare(b.academic_term || '');
+            case 'term-desc': return (b.academic_term || '').localeCompare(a.academic_term || '');
+            case 'name-asc': {
+                const nameA = a.student ? `${a.student.lname} ${a.student.fname}` : '';
+                const nameB = b.student ? `${b.student.lname} ${b.student.fname}` : '';
+                return nameA.localeCompare(nameB);
+            }
+            case 'name-desc': {
+                const nameA = a.student ? `${a.student.lname} ${a.student.fname}` : '';
+                const nameB = b.student ? `${b.student.lname} ${b.student.fname}` : '';
+                return nameB.localeCompare(nameA);
+            }
+            default: return 0;
+        }
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div style="font-size:3rem;opacity:0.5;margin-bottom:15px;">✅</div><h3 style="color:#6fe3ff;margin-bottom:8px;">No approved advising forms</h3><p style="color:#9bbaca;">Approved forms will appear here</p></div></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = '';
+    filtered.forEach(adv => {
+        const student = adv.student;
+        const fullName = student ? `${student.lname}, ${student.fname}` : `ID: ${adv.student_id}`;
+        const initials = student ? `${student.fname[0] || ''}${student.lname[0] || ''}` : '??';
+        const termDisplay = adv.academic_term ? getDescriptiveAcademicTerm(adv.academic_term) : '—';
+        const subjectCount = adv.subjects ? adv.subjects.length : 0;
+        const approvedDate = adv.approved_at ? formatDateDisplay(adv.approved_at) : '—';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><div class="professor-badge"><div class="professor-avatar">${initials}</div>${fullName}</div></td>
+            <td>${adv.student_id}</td>
+            <td>${termDisplay}</td>
+            <td>${subjectCount} subject${subjectCount !== 1 ? 's' : ''}</td>
+            <td>${approvedDate}</td>
+            <td>
+                <button class="btn-view" onclick="viewApprovedAdvising(${adv.id})">View</button>
+                <button class="action-btn deny" onclick="deleteApprovedAdvising(${adv.id})">✗ Delete</button>
+             </td>`;
+        tbody.appendChild(row);
+    });
+}
+
+async function fetchAndRenderApprovedAdvising() {
+    await renderApprovedAdvising();
+}
+
+async function viewApprovedAdvising(advisingId) {
+    const adv = approvedAdvisingList.find(a => a.id === advisingId);
+    if (!adv) return;
+
+    const student = await getStudentDetails(adv.student_id);
+    const studentName = student ? `${student.fname} ${student.lname}` : `ID: ${adv.student_id}`;
+    const termDisplay = adv.academic_term ? getDescriptiveAcademicTerm(adv.academic_term) : '—';
+    
+    let subjectsHtml = '';
+    if (adv.subjects && adv.subjects.length > 0) {
+        subjectsHtml = '<ul style="margin-top:10px; padding-left:20px;">';
+        adv.subjects.forEach(sub => {
+            subjectsHtml += `<li style="color:#dffaff;">${sub.code} - ${sub.title} (${sub.units} units)</li>`;
+        });
+        subjectsHtml += '</ul>';
+    } else {
+        subjectsHtml = '<p style="color:#9bbaca;">No subjects listed.</p>';
+    }
+
+    Swal.fire({
+        title: 'Approved Advising Form',
+        html: `
+            <div style="text-align:left;">
+                <p><strong>Student:</strong> ${studentName}</p>
+                <p><strong>Student ID:</strong> ${adv.student_id}</p>
+                <p><strong>Academic Term:</strong> ${termDisplay}</p>
+                <p><strong>Approved At:</strong> ${formatDateDisplay(adv.approved_at)}</p>
+                <p><strong>Subjects:</strong></p>
+                ${subjectsHtml}
+            </div>
+        `,
+        background: '#0b2a3a',
+        color: '#dffaff',
+        confirmButtonColor: '#00f2ff'
+    });
+}
+
+async function deleteApprovedAdvising(advisingId) {
+    const result = await Swal.fire({
+        title: 'Delete Approved Form?',
+        text: 'This will permanently remove the approved advising record.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#c44a4a',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete',
+        background: '#0b2a3a',
+        color: '#dffaff'
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('advising')
+            .delete()
+            .eq('id', advisingId);
+        if (error) throw error;
+
+        Swal.fire({ title: 'Deleted', text: 'Approved advising record removed.', icon: 'success', timer: 2000, background: '#0b2a3a', color: '#dffaff' });
+        await fetchAndRenderApprovedAdvising();
+    } catch (e) {
+        Swal.fire({ title: 'Error', text: e.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+    }
+}
+
+function resetApprovedFilters() {
+    document.getElementById('approvedSearch').value = '';
+    document.getElementById('approvedSortSelect').value = 'date-desc';
+    renderApprovedAdvising();
+}
+
+function openApprovedAdvisingModal() {
+    document.getElementById('approvedAdvisingModal').classList.add('active');
+    fetchAndRenderApprovedAdvising();
+}
+
+function closeApprovedAdvisingModal() {
+    document.getElementById('approvedAdvisingModal').classList.remove('active');
+}
+
+// ==================== DENY ADVISING (PERMANENT DELETE) ====================
+async function denyAdvisingRequest() {
+    if (!currentAdvisingRequest) return;
+    const res = await Swal.fire({
+        title: 'Deny Advising Request?',
+        text: 'This will permanently delete the request. The student can submit a new form if needed.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#c44a4a',
+        cancelButtonColor: '#6c757d',
+        background: '#0b2a3a',
+        color: '#dffaff'
+    });
+    if (!res.isConfirmed) return;
+    try {
+        // DELETE the request instead of updating status
+        await supabaseClient.from('request_advising').delete().eq('id', currentAdvisingRequest.id);
+        closeAdvisingModal();
+        await renderAdvisingRequests();
+        Swal.fire({ title: 'Deleted', text: 'Advising request has been removed.', icon: 'info', timer: 2500, showConfirmButton: false, background: '#0b2a3a', color: '#dffaff' });
+    } catch (e) {
+        Swal.fire({ title: 'Error', text: 'Failed to delete: ' + e.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+    }
+}
+
+async function quickDenyAdvising(requestId) {
+    const req = advisingRequests.find(r => String(r.id) === String(requestId));
+    if (!req) return;
+    const res = await Swal.fire({
+        title: 'Deny Advising Request?',
+        text: 'This will permanently delete the request.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#c44a4a',
+        cancelButtonColor: '#6c757d',
+        background: '#0b2a3a',
+        color: '#dffaff'
+    });
+    if (!res.isConfirmed) return;
+    try {
+        await supabaseClient.from('request_advising').delete().eq('id', requestId);
+        await renderAdvisingRequests();
+        Swal.fire({ title: 'Deleted', icon: 'info', timer: 2000, showConfirmButton: false, background: '#0b2a3a', color: '#dffaff' });
+    } catch (e) {
+        Swal.fire({ title: 'Error', text: e.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' });
+    }
+}
+
+// ==================== PROFESSOR REQUEST MODALS ====================
+function viewProfessorRequestDetails(requestId) {
+    const request = professorRequests.find(r => r.uid === requestId);
+    if (!request) return;
+    currentProfessorRequestId = requestId;
+    document.getElementById('modalProfessorName').textContent = `${request.lname || ''}, ${request.fname || ''}`;
+    document.getElementById('modalEmail').textContent = request.email || '';
+    document.getElementById('modalUsername').textContent = request.uname || '';
+    document.getElementById('modalRequestType').textContent = request.type || 'Professor Registration';
+    document.getElementById('modalDate').textContent = formatDateDisplay(request.date_time);
+    document.getElementById('modalApproveBtn').onclick = () => { closeProfessorRequestModal(); approveProfessorRequest(requestId); };
+    document.getElementById('modalDenyBtn').onclick = () => { closeProfessorRequestModal(); denyProfessorRequest(requestId); };
+    document.getElementById('professorRequestModal').classList.add('active');
+}
+function closeProfessorRequestModal() { document.getElementById('professorRequestModal').classList.remove('active'); }
+
+async function viewSubjectRequestDetails(requestId) {
+    const numericId = typeof requestId === 'string' ? parseInt(requestId) : requestId;
+    let request = subjectRequests.find(r => r.id === numericId);
+    if (!request) { subjectRequests = await fetchSubjectRequests(); request = subjectRequests.find(r => r.id === numericId); }
+    if (!request) return;
+    currentSubjectRequestId = numericId;
+    const profDetails = await getProfessorDetails(request.uid);
+    const descriptiveTerm = getDescriptiveAcademicTerm(request.acad_term);
+    let sectionDisplay = request.section === 'Any' ? 'Any Set (All Years & Sections)' : (request.section || 'Not specified');
+    document.getElementById('subjectModalProfessorName').textContent = profDetails ? `${profDetails.lname}, ${profDetails.fname}` : request.prof_name || 'Unknown';
+    document.getElementById('subjectModalEmail').textContent = profDetails?.email || '';
+    document.getElementById('subjectModalSubjectName').textContent = request.sub || 'N/A';
+    document.getElementById('subjectModalSubjectCode').textContent = request.sub_code || 'N/A';
+    document.getElementById('subjectModalAcademicTerm').textContent = descriptiveTerm;
+    document.getElementById('subjectModalSection').textContent = sectionDisplay;
+    document.getElementById('subjectModalDate').textContent = formatDateDisplay(request.date_time);
+    document.getElementById('subjectModalApproveBtn').onclick = () => { closeSubjectRequestModal(); approveSubjectRequest(numericId); };
+    document.getElementById('subjectModalDenyBtn').onclick = () => { closeSubjectRequestModal(); denySubjectRequest(numericId); };
+    document.getElementById('subjectRequestModal').classList.add('active');
+}
+function closeSubjectRequestModal() { document.getElementById('subjectRequestModal').classList.remove('active'); }
+
+// ==================== APPROVE/DENY PROFESSOR/SUBJECT ====================
+async function approveProfessorRequest(requestId) {
+    const request = professorRequests.find(r => r.uid === requestId);
+    if (!request) return;
+    const result = await Swal.fire({ title: 'Approve Professor Account?', text: `Approve "${request.fname} ${request.lname}"?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#28a745', cancelButtonColor: '#ff6b6b', confirmButtonText: 'Yes, approve', background: '#0b2a3a', color: '#dffaff' });
+    if (!result.isConfirmed) return;
+    try {
+        await supabaseClient.from('professor').insert([{ uid: request.uid, fname: request.fname, lname: request.lname, uname: request.uname, email: request.email, password: request.password }]);
+        await supabaseClient.from('requests_professor').delete().eq('uid', requestId);
+        await renderPendingRequests(); await renderProfessorsTable();
+        Swal.fire({ title: 'Approved!', text: 'Professor account approved.', icon: 'success', timer: 3000, showConfirmButton: false, background: '#0b2a3a', color: '#dffaff' });
+    } catch (error) { Swal.fire({ title: 'Error', text: error.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' }); }
+}
+async function denyProfessorRequest(requestId) {
+    const request = professorRequests.find(r => r.uid === requestId);
+    if (!request) return;
+    const result = await Swal.fire({ title: 'Deny Professor Account?', text: `Deny "${request.fname} ${request.lname}"?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#c44a4a', cancelButtonColor: '#6c757d', confirmButtonText: 'Yes, deny', background: '#0b2a3a', color: '#dffaff' });
+    if (!result.isConfirmed) return;
+    try {
+        await supabaseClient.from('requests_professor').delete().eq('uid', requestId);
+        await renderPendingRequests();
+        Swal.fire({ title: 'Denied!', icon: 'info', timer: 2500, showConfirmButton: false, background: '#0b2a3a', color: '#dffaff' });
+    } catch (error) { Swal.fire({ title: 'Error', text: error.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' }); }
+}
+
+async function approveSubjectRequest(requestId) {
+    const numericId = typeof requestId === 'string' ? parseInt(requestId) : requestId;
+    let request = subjectRequests.find(r => r.id === numericId);
+    if (!request) { subjectRequests = await fetchSubjectRequests(); request = subjectRequests.find(r => r.id === numericId); }
+    if (!request) return;
+    const descriptiveTerm = getDescriptiveAcademicTerm(request.acad_term);
+    const result = await Swal.fire({ title: 'Approve Subject Request?', html: `Approve "<strong>${request.sub}</strong>"?<br><small>Term: ${descriptiveTerm}</small>`, icon: 'question', showCancelButton: true, confirmButtonColor: '#28a745', cancelButtonColor: '#ff6b6b', confirmButtonText: 'Yes, approve', background: '#0b2a3a', color: '#dffaff' });
+    if (!result.isConfirmed) return;
+    try {
+        const profDetails = await getProfessorDetails(request.uid);
+        const professorName = profDetails ? `${profDetails.fname} ${profDetails.lname}` : request.prof_name;
+        const { data: existingSubject } = await supabaseClient.from('subjects').select('id').eq('id', numericId).maybeSingle();
+        let finalId = numericId;
+        if (existingSubject) {
+            const { data: maxIdData } = await supabaseClient.from('subjects').select('id').order('id', { ascending: false }).limit(1);
+            finalId = (maxIdData && maxIdData.length > 0) ? (maxIdData[0].id + 1) : 1;
+        }
+        await supabaseClient.from('subjects').insert([{ id: finalId, prof_id: request.uid, professor_name: professorName, sub: request.sub, sub_code: request.sub_code, academic_term: request.acad_term, section: request.section }]);
+        await supabaseClient.from('requests_subject').delete().eq('id', numericId);
+        await renderPendingRequests();
+        Swal.fire({ title: 'Approved!', text: `"${request.sub}" has been added.`, icon: 'success', timer: 3000, showConfirmButton: false, background: '#0b2a3a', color: '#dffaff' });
+    } catch (error) { Swal.fire({ title: 'Error', text: error.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' }); }
+}
+async function denySubjectRequest(requestId) {
+    const numericId = typeof requestId === 'string' ? parseInt(requestId) : requestId;
+    let request = subjectRequests.find(r => r.id === numericId);
+    if (!request) { subjectRequests = await fetchSubjectRequests(); request = subjectRequests.find(r => r.id === numericId); }
+    if (!request) return;
+    const result = await Swal.fire({ title: 'Deny Subject Request?', text: `Deny "${request.sub}"?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#c44a4a', cancelButtonColor: '#6c757d', confirmButtonText: 'Yes, deny', background: '#0b2a3a', color: '#dffaff' });
+    if (!result.isConfirmed) return;
+    try {
+        await supabaseClient.from('requests_subject').delete().eq('id', numericId);
+        await renderPendingRequests();
+        Swal.fire({ title: 'Denied!', icon: 'info', timer: 2500, showConfirmButton: false, background: '#0b2a3a', color: '#dffaff' });
+    } catch (error) { Swal.fire({ title: 'Error', text: error.message, icon: 'error', background: '#0b2a3a', color: '#dffaff', confirmButtonColor: '#00f2ff' }); }
+}
+
+// ==================== PROFESSORS TABLE ====================
+async function renderProfessorsTable() {
+    const tbody = document.getElementById('professorsTableBody');
+    try {
+        const { data: professors, error } = await supabaseClient.from('professor').select('*').order('lname');
+        if (error) throw error;
+        if (!professors || !professors.length) {
+            tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div style="font-size:3rem;opacity:0.5;margin-bottom:15px;">👨‍🏫</div><h3 style="color:#6fe3ff;margin-bottom:8px;">No professors found</h3></div></td></tr>`;
+            return;
+        }
+        let filtered = professors.filter(prof => {
+            if (!professorFilters.search) return true;
+            const s = professorFilters.search.toLowerCase();
+            return `${prof.lname},${prof.fname}`.toLowerCase().includes(s) || (prof.email||'').toLowerCase().includes(s) || (prof.uname||'').toLowerCase().includes(s);
+        });
+        tbody.innerHTML = '';
+        filtered.forEach(prof => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><div class="professor-badge"><div class="professor-avatar">${(prof.fname||'')[0]}${(prof.lname||'')[0]}</div>${prof.lname}, ${prof.fname}</div></td>
+                <td>${prof.email || '—'}</td>
+                <td>${prof.uname || '—'}</td>
+                <td><span class="status-badge status-active">Active</span></td>`;
+            tbody.appendChild(row);
+        });
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><p style="color:#ffb3b3;">Error: ${error.message}</p></div></td></tr>`;
+    }
+}
+
+// ==================== FILTERS ====================
+window.applyFilters          = () => { currentFilters  = { search: document.getElementById('subjectSearch').value  }; renderPendingRequests(); };
+window.resetFilters          = () => { document.getElementById('subjectSearch').value  = ''; currentFilters  = { search: '' }; renderPendingRequests(); };
+window.applyAdvisingFilters  = () => { advisingFilters  = { search: document.getElementById('advisingSearch').value  }; renderAdvisingRequests(); };
+window.resetAdvisingFilters  = () => { document.getElementById('advisingSearch').value = ''; advisingFilters  = { search: '' }; renderAdvisingRequests(); };
+window.applyProfessorFilters = () => { professorFilters = { search: document.getElementById('professorSearch').value }; renderProfessorsTable(); };
+window.resetProfessorFilters = () => { document.getElementById('professorSearch').value= ''; professorFilters = { search: '' }; renderProfessorsTable(); };
+window.resetApprovedFilters = resetApprovedFilters;
+
+// ==================== GLOBAL EXPOSE ====================
+window.viewProfessorRequestDetails = viewProfessorRequestDetails;
+window.viewSubjectRequestDetails   = viewSubjectRequestDetails;
+window.closeProfessorRequestModal  = closeProfessorRequestModal;
+window.closeSubjectRequestModal    = closeSubjectRequestModal;
+window.approveProfessorRequest     = approveProfessorRequest;
+window.denyProfessorRequest        = denyProfessorRequest;
+window.approveSubjectRequest       = approveSubjectRequest;
+window.denySubjectRequest          = denySubjectRequest;
+window.openAdvisingModal           = openAdvisingModal;
+window.closeAdvisingModal          = closeAdvisingModal;
+window.viewAdvisingPdf             = viewAdvisingPdf;
+window.approveAdvisingRequest      = approveAdvisingRequest;
+window.denyAdvisingRequest         = denyAdvisingRequest;
+window.quickDenyAdvising           = quickDenyAdvising;
+window.removeAdvisingSubject       = removeAdvisingSubject;
+window.addSubjectFromSearch        = addSubjectFromSearch;
+window.viewApprovedAdvising        = viewApprovedAdvising;
+window.deleteApprovedAdvising      = deleteApprovedAdvising;
+window.openApprovedAdvisingModal   = openApprovedAdvisingModal;
+window.closeApprovedAdvisingModal  = closeApprovedAdvisingModal;
+window.toggleProfileMenu           = toggleProfileMenu;
+window.confirmLogout               = confirmLogout;
+
+// ==================== INIT ====================
+setInterval(() => { 
+    renderPendingRequests(); 
+    renderAdvisingRequests(); 
+}, 300000);
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Re-check auth in case localStorage was tampered with after page load
+    if (!checkAdminAuth()) return;
+
+    const savedImage = localStorage.getItem('profileImage');
+    if (savedImage) document.getElementById('navProfileImage').src = savedImage;
+    await renderPendingRequests();
+    await renderAdvisingRequests();
+    await renderProfessorsTable();
+});
+
+window.addEventListener('storage', e => {
+    if (e.key === 'profileImage') document.getElementById('navProfileImage').src = e.newValue;
+});
+</script>
+
+</body>
+</html>

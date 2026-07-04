@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile | ADV-Attendify</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/websitelogo.png">
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- CryptoJS for password hashing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <style>
+        * {
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height:100vh;
+            overflow:hidden;
+            background:url("images/backgroundhome.png") center/cover no-repeat fixed;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ================= NAVIGATION BAR ================= */
+        .navbar {
+            width: 100%;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(20, 30, 50, 0.55);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(110, 243, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-btn {
+            font-size: 28px;
+            background: none;
+            border: none;
+            color: #6fe3ff;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 5px;
+        }
+
+        .menu-btn:hover {
+            color: #00f2ff;
+            transform: scale(1.1);
+        }
+
+        .logo-text {
+            color: #6ef3ff;
+            font-size: 22px;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(110, 243, 255, 0.5);
+        }
+
+        /* ================= MAIN CONTENT ================= */
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .edit-container {
+            width: 100%;
+            max-width: 450px;
+            max-height: 85vh;
+            border-radius: 22px;
+            background: rgba(20, 30, 50, 0.55);
+            backdrop-filter: blur(18px) saturate(150%);
+            border: 1px solid rgba(110, 243, 255, 0.25);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Remove scrollbar from entire container */
+        .edit-container {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .edit-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .edit-header {
+            text-align: center;
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(110, 243, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .edit-header h1 {
+            color: #6ef3ff;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .edit-header span {
+            display: block;
+            width: 60px;
+            height: 4px;
+            margin: 10px auto 0;
+            border-radius: 4px;
+            background: linear-gradient(to right, #00f2ff, #7f5cff);
+        }
+
+        .edit-body {
+            padding: 25px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Remove scrollbar from edit body */
+        .edit-body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .edit-body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #b8e9ff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            font-size: 14px;
+            transition: 0.3s;
+            resize: none;
+        }
+
+        textarea {
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: #a9b4d6;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #00f2ff;
+            box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.35);
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        input[readonly] {
+            background: rgba(255, 255, 255, 0.05);
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* ================= FIXED PROFILE PICTURE SECTION ================= */
+        .profile-picture-section {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-picture-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+
+        .profile-picture {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #6ef3ff;
+            box-shadow: 0 0 20px rgba(110, 243, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-picture:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 25px rgba(110, 243, 255, 0.5);
+        }
+
+        .change-photo-btn {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(110, 243, 255, 0.15);
+            color: #6ef3ff;
+            border: 2px solid #6ef3ff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .change-photo-btn:hover {
+            background: rgba(110, 243, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 242, 255, 0.3);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .error-msg {
+            color: #ff6b6b;
+            font-size: 11px;
+            margin-top: 3px;
+            display: none;
+            position: absolute;
+            bottom: -16px;
+            left: 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        .save-btn, .cancel-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .save-btn {
+            color: #020617;
+            background: linear-gradient(135deg, #00f2ff, #7f5cff);
+        }
+
+        .cancel-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #b8e9ff;
+            border: 2px solid rgba(110, 243, 255, 0.3);
+        }
+
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 242, 255, 0.5);
+        }
+
+        .cancel-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(110, 243, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .save-btn:active, .cancel-btn:active {
+            transform: scale(0.97);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 20px;
+            }
+            
+            .edit-container {
+                max-width: 95%;
+                max-height: 90vh;
+            }
+            
+            .edit-body {
+                padding: 20px;
+            }
+            
+            .profile-picture-container {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .profile-picture {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .edit-header h1 {
+                font-size: 24px;
+            }
+            
+            input, textarea {
+                padding: 10px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .edit-container {
+                max-height: 80vh;
+            }
+            
+            .profile-picture-container {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .profile-picture {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .edit-header {
+                padding: 15px 20px;
+            }
+            
+            .edit-body {
+                padding: 15px;
+            }
+        }
+
+        /* Custom SweetAlert2 styling */
+        .swal2-popup {
+            background: #0b2a3a !important;
+            border-radius: 22px !important;
+            border: 1px solid rgba(110, 243, 255, 0.25) !important;
+        }
+
+        .swal2-title {
+            color: #6ef3ff !important;
+        }
+
+        .swal2-html-container {
+            color: #dffaff !important;
+        }
+
+        .swal2-confirm {
+            background: linear-gradient(135deg, #00f2ff, #7f5cff) !important;
+            color: #020617 !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================= NAVIGATION BAR ================= -->
+<div class="navbar">
+    <div class="nav-left">
+        <button class="menu-btn" onclick="goBack()">←</button>
+        <span class="logo-text">Edit Profile</span>
+    </div>
+</div>
+
+<!-- ================= MAIN CONTENT ================= -->
+<div class="main-content">
+    <div class="edit-container">
+        <div class="edit-header">
+            <h1>Student Profile</h1>
+            <span></span>
+        </div>
+
+        <div class="edit-body">
+            <!-- Profile Picture Section -->
+            <div class="profile-picture-section">
+                <div class="profile-picture-container">
+                    <img src="images/profile2.png" id="profileImage" class="profile-picture" alt="Profile Picture">
+                </div>
+                <div class="upload-btn-container">
+                    <label for="fileInput" class="change-photo-btn">Change Photo</label>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>First Name</label>
+                <input type="text" id="firstName" placeholder="Enter First Name">
+                <div class="error-msg" id="firstName-error">First Name is required</div>
+            </div>
+
+            <div class="input-group">
+                <label>Last Name</label>
+                <input type="text" id="lastName" placeholder="Enter Last Name">
+                <div class="error-msg" id="lastName-error">Last Name is required</div>
+            </div>
+
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="Enter Email">
+                <div class="error-msg" id="email-error">Valid email is required</div>
+            </div>
+
+            <div class="input-group">
+                <label>ID Number</label>
+                <input type="text" id="idNumber" placeholder="Enter ID Number" readonly>
+            </div>
+
+            <div class="input-group">
+                <label>About Me</label>
+                <textarea id="aboutMe" placeholder="Tell us something about yourself..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>New Password (Leave blank to keep current)</label>
+                <input type="password" id="newPassword" placeholder="Enter New Password">
+            </div>
+
+            <div class="input-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm New Password">
+                <div class="error-msg" id="confirmPassword-error">Passwords do not match</div>
+            </div>
+
+            <div class="button-group">
+                <button class="save-btn" onclick="saveProfile()" id="saveBtn">Save Changes</button>
+                <a href="students_home.html" class="cancel-btn">Cancel</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Initialize Supabase client
+const { createClient } = supabase;
+
+const supabaseClient = createClient(
+    "https://tmyrnjdwaayelrctqppg.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteXJuamR3YWF5ZWxyY3RxcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDgzODEsImV4cCI6MjA4Njg4NDM4MX0.w_DhdLWk4gA-x434kSobbXjG83IXHpakhRsaig-zMpw"
+);
+
+// Get current user ID from localStorage
+const currentUserId = localStorage.getItem('userId');
+const userType = localStorage.getItem('userType');
+
+// Redirect if not logged in or not a student
+if (!currentUserId || userType !== 'student') {
+    window.location.href = 'index.html';
+}
+
+// Default profile image
+const DEFAULT_PROFILE_IMAGE = 'images/profile2.png';
+
+// Function to hash password
+async function hashPassword(password) {
+    return CryptoJS.SHA256(password).toString();
+}
+
+// Function to go back
+function goBack() {
+    window.history.back();
+}
+
+// Load student data from database
+async function loadStudentData() {
+    try {
+        const { data: studentData, error } = await supabaseClient
+            .from('student')
+            .select('*')
+            .eq('id', currentUserId)
+            .single();
+
+        if (error) {
+            console.error('Error loading student data:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to load profile data. Please refresh the page.',
+                icon: 'error',
+                background: '#0b2a3a',
+                color: '#dffaff',
+                confirmButtonColor: '#00f2ff'
+            });
+            return;
+        }
+
+        if (studentData) {
+            console.log('Student data loaded:', studentData);
+            
+            // Populate form fields
+            document.getElementById('firstName').value = studentData.fname || '';
+            document.getElementById('lastName').value = studentData.lname || '';
+            document.getElementById('email').value = studentData.email || '';
+            document.getElementById('idNumber').value = studentData.id || '';
+            document.getElementById('aboutMe').value = studentData.info || '';
+            
+            // Load profile picture
+            if (studentData['profile-pic']) {
+                document.getElementById('profileImage').src = studentData['profile-pic'];
+                // Also save to localStorage for other pages
+                localStorage.setItem('profileImage', studentData['profile-pic']);
+            }
+            
+            // Update localStorage with current data
+            localStorage.setItem('profileFirstName', studentData.fname || '');
+            localStorage.setItem('profileLastName', studentData.lname || '');
+            localStorage.setItem('profileEmail', studentData.email || '');
+            localStorage.setItem('aboutText', studentData.info || '');
+            localStorage.setItem('userFullName', `${studentData.fname || ''} ${studentData.lname || ''}`.trim());
+        }
+    } catch (error) {
+        console.error('Error in loadStudentData:', error);
+    }
+}
+
+// Profile picture upload functionality
+document.getElementById('fileInput').addEventListener('change', async function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Image size must be less than 5MB',
+                icon: 'error',
+                background: '#0b2a3a',
+                color: '#dffaff',
+                confirmButtonColor: '#00f2ff'
+            });
+            return;
+        }
+
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Please select an image file',
+                icon: 'error',
+                background: '#0b2a3a',
+                color: '#dffaff',
+                confirmButtonColor: '#00f2ff'
+            });
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageUrl = e.target.result;
+            document.getElementById('profileImage').src = imageUrl;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Real-time password validation
+document.getElementById('confirmPassword').addEventListener('input', function() {
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = this.value;
+    const errorDiv = document.getElementById('confirmPassword-error');
+    
+    if (newPassword !== '' && confirmPassword !== '' && newPassword !== confirmPassword) {
+        errorDiv.textContent = 'Passwords do not match';
+        errorDiv.style.display = 'block';
+    } else {
+        errorDiv.style.display = 'none';
+    }
+});
+
+// Real-time email validation
+document.getElementById('email').addEventListener('input', function() {
+    const email = this.value.trim();
+    const errorDiv = document.getElementById('email-error');
+    
+    if (email === '') {
+        errorDiv.textContent = 'Email is required';
+        errorDiv.style.display = 'block';
+    } else if (!isValidEmail(email)) {
+        errorDiv.textContent = 'Please enter a valid email address';
+        errorDiv.style.display = 'block';
+    } else {
+        errorDiv.style.display = 'none';
+    }
+});
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Save profile function
+async function saveProfile() {
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const aboutMe = document.getElementById('aboutMe').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    let valid = true;
+    
+    // Validate required fields
+    if (firstName === '') {
+        document.getElementById('firstName-error').style.display = 'block';
+        valid = false;
+    } else {
+        document.getElementById('firstName-error').style.display = 'none';
+    }
+    
+    if (lastName === '') {
+        document.getElementById('lastName-error').style.display = 'block';
+        valid = false;
+    } else {
+        document.getElementById('lastName-error').style.display = 'none';
+    }
+    
+    if (email === '') {
+        document.getElementById('email-error').textContent = 'Email is required';
+        document.getElementById('email-error').style.display = 'block';
+        valid = false;
+    } else if (!isValidEmail(email)) {
+        document.getElementById('email-error').textContent = 'Please enter a valid email address';
+        document.getElementById('email-error').style.display = 'block';
+        valid = false;
+    } else {
+        document.getElementById('email-error').style.display = 'none';
+    }
+    
+    // Validate password if entered
+    if (newPassword !== '') {
+        if (newPassword !== confirmPassword) {
+            document.getElementById('confirmPassword-error').textContent = 'Passwords do not match';
+            document.getElementById('confirmPassword-error').style.display = 'block';
+            valid = false;
+        } else if (newPassword.length < 6) {
+            document.getElementById('confirmPassword-error').textContent = 'Password must be at least 6 characters';
+            document.getElementById('confirmPassword-error').style.display = 'block';
+            valid = false;
+        } else {
+            document.getElementById('confirmPassword-error').style.display = 'none';
+        }
+    }
+    
+    if (!valid) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+        return;
+    }
+    
+    try {
+        // Prepare update data
+        const updateData = {
+            fname: firstName,
+            lname: lastName,
+            email: email,
+            info: aboutMe
+        };
+        
+        // Add password to update if changed
+        if (newPassword !== '') {
+            updateData.password = await hashPassword(newPassword);
+        }
+        
+        // Add profile picture to update if changed
+        const profileImage = document.getElementById('profileImage').src;
+        if (profileImage !== DEFAULT_PROFILE_IMAGE && !profileImage.includes('images/profile2.png')) {
+            updateData['profile-pic'] = profileImage;
+        }
+        
+        console.log('Updating profile with data:', updateData);
+        
+        // Update database
+        const { error } = await supabaseClient
+            .from('student')
+            .update(updateData)
+            .eq('id', currentUserId);
+        
+        if (error) {
+            console.error('Error updating profile:', error);
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to update profile: ' + error.message,
+                icon: 'error',
+                background: '#0b2a3a',
+                color: '#dffaff',
+                confirmButtonColor: '#00f2ff'
+            });
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Changes';
+            return;
+        }
+        
+        // Update localStorage with new data
+        localStorage.setItem('profileFirstName', firstName);
+        localStorage.setItem('profileLastName', lastName);
+        localStorage.setItem('profileEmail', email);
+        localStorage.setItem('aboutText', aboutMe);
+        localStorage.setItem('userFullName', `${firstName} ${lastName}`.trim());
+        
+        if (updateData['profile-pic']) {
+            localStorage.setItem('profileImage', updateData['profile-pic']);
+        }
+        
+        // Trigger storage event for other tabs
+        window.dispatchEvent(new Event('storage'));
+        
+        Swal.fire({
+            title: 'Success!',
+            text: 'Profile updated successfully!',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            background: '#0b2a3a',
+            color: '#dffaff'
+        });
+        
+        // Go back to home page after success
+        setTimeout(() => {
+            window.location.href = 'students_home.html';
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Error in saveProfile:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'An unexpected error occurred. Please try again.',
+            icon: 'error',
+            background: '#0b2a3a',
+            color: '#dffaff',
+            confirmButtonColor: '#00f2ff'
+        });
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+    }
+}
+
+// Load student data on page load 
+document.addEventListener('DOMContentLoaded', function() {
+    loadStudentData();
+});
+</script>
+
+</body>
+</html>

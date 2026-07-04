@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
+    <title>Professor Attendance | ADV-Attendify</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/websitelogo.png">
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: url("images/backgroundhome.png") center/cover no-repeat fixed;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(8px);
+            z-index: 1001;
+        }
+
+        .menu-btn {
+            font-size: 28px;
+            background: none;
+            border: none;
+            color: #6fe3ff;
+            cursor: pointer;
+        }
+
+        .profile-wrapper {
+            position: relative;
+        }
+
+        .profile {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid #6fe3ff;
+        }
+
+        .profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-menu {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: #0b2a3a;
+            border-radius: 12px;
+            padding: 10px 0;
+            min-width: 170px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.25s;
+            z-index: 1002;
+        }
+
+        .profile-menu.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .profile-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: #dffaff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .profile-menu a:hover {
+            background: #1ea7d7;
+            color: #00141c;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            width: 260px;
+            height: 100%;
+            background: rgba(10, 30, 40, 0.95);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid #2c5a6e;
+            padding: 30px 20px;
+            transition: left 0.3s ease;
+            z-index: 2000;
+            color: #e0f0f5;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar .close-btn {
+            background: none;
+            border: none;
+            color: #6fe3ff;
+            font-size: 28px;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            margin: 25px 0;
+        }
+
+        .sidebar ul li a {
+            color: #dffaff;
+            text-decoration: none;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.2s;
+        }
+
+        .sidebar ul li a:hover {
+            color: #6fe3ff;
+            transform: translateX(5px);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(2px);
+            z-index: 1500;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Main content */
+        .main-content {
+            margin-top: 100px;
+            padding: 20px 30px;
+            margin-left: 0;
+            transition: margin-left 0.3s;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .section-header h1 {
+            color: #6fe3ff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: 2.2rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .search-box {
+            background: rgba(10, 30, 40, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid #2c5a6e;
+            border-radius: 40px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 300px;
+            max-width: 100%;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: #e6f7ff;
+            font-size: 1rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .search-box input::placeholder {
+            color: #9bbaca;
+        }
+
+        .search-box span {
+            color: #6fe3ff;
+            font-size: 1.2rem;
+        }
+
+        /* Subject cards grid */
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .subject-card {
+            background: rgba(10, 30, 40, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid #2c5a6e;
+            border-radius: 24px;
+            padding: 25px 20px;
+            color: #e6f7ff;
+            box-shadow: 0 10px 20px rgba(0, 20, 30, 0.5);
+            transition: 0.2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subject-card:hover {
+            border-color: #6fe3ff;
+            background: rgba(20, 50, 65, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .subject-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .subject-card p {
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        .subject-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #1c3f4f;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid #3b7a94;
+        }
+
+        /* Attendance panel */
+        .attendance-panel {
+            background: rgba(8, 25, 35, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1ea7d7;
+            border-radius: 32px;
+            padding: 30px;
+            margin-top: 40px;
+            color: #f0faff;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.6);
+        }
+
+        /* NEW: Attendance panel header with close button */
+        .attendance-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px dashed #2c5a6e;
+            padding-bottom: 10px;
+        }
+
+        .attendance-panel-header h2 {
+            color: #6fe3ff;
+            font-size: 2rem;
+            font-weight: 400;
+            margin: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .close-panel-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(220, 70, 70, 0.2);
+            border: 1px solid #ff7b7b;
+            color: #ffb3b3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        .close-panel-btn:hover {
+            background: #c44a4a;
+            color: white;
+            border-color: #ff7b7b;
+            transform: scale(1.05);
+        }
+
+        .date-search-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .date-input-group {
+            display: flex;
+            align-items: center;
+            background: #1c3f4f;
+            border: 1px solid #3b7a94;
+            border-radius: 40px;
+            padding: 5px 15px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .date-input-group span {
+            color: #6fe3ff;
+            margin-right: 10px;
+        }
+
+        .date-input-group input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .date-input-group input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #6fe3ff;
+            padding: 8px 25px;
+            border-radius: 40px;
+            color: #dffaff;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-secondary:hover {
+            background: #1ea7d7;
+            color: #00141c;
+        }
+
+        .sessions-list {
+            margin-bottom: 30px;
+        }
+
+        .sessions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sessions-header h3 {
+            color: #b3e4ff;
+            font-weight: 400;
+            font-size: 1.3rem;
+        }
+
+        .session-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .session-card {
+            background: #1c3f4f;
+            border: 1px solid #3b7a94;
+            border-radius: 40px;
+            padding: 15px 20px;
+            color: #d7f0fa;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .session-card:hover {
+            background: #1ea7d7;
+            color: #00141c;
+            border-color: #6fe3ff;
+        }
+
+        .session-card.active {
+            background: #1ea7d7;
+            color: #00141c;
+            border-color: #6fe3ff;
+        }
+
+        .session-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .session-date {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .session-time {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .session-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .session-actions button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            min-width: 70px;
+        }
+
+        .session-actions button:hover {
+            transform: scale(1.05);
+        }
+
+        .download-session {
+            background: #2ecc71 !important;
+        }
+
+        .delete-session {
+            background: #e74c3c !important;
+        }
+
+        .students-section {
+            margin-top: 30px;
+        }
+
+        .students-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .students-header h3 {
+            color: #b3e4ff;
+            font-weight: 400;
+            font-size: 1.3rem;
+        }
+
+        .student-search-box {
+            background: #1c3f4f;
+            border: 1px solid #3b7a94;
+            border-radius: 40px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 250px;
+        }
+
+        .student-search-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .student-search-box span {
+            color: #6fe3ff;
+            font-size: 1.2rem;
+        }
+
+        .attendance-table-container {
+            overflow-x: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 24px;
+            padding: 5px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .attendance-table th {
+            background: #1c3f4f;
+            color: #b3e4ff;
+            font-weight: 500;
+            padding: 15px 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .attendance-table td {
+            padding: 15px 10px;
+            border-bottom: 1px solid #2e5f72;
+            color: #d7f0fa;
+        }
+
+        .attendance-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .attendance-table tr:hover td {
+            background: rgba(30, 100, 130, 0.3);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-present {
+            background: #1e4a2c;
+            color: #8fff9f;
+            border: 1px solid #2ecc71;
+        }
+
+        .status-late {
+            background: #4a2c1c;
+            color: #ffae6d;
+            border: 1px solid #e67e22;
+        }
+
+        .status-absent {
+            background: #4a2c2c;
+            color: #ff9f9f;
+            border: 1px solid #e74c3c;
+        }
+
+        .status-pending {
+            background: #4a3a1c;
+            color: #ffdb8a;
+            border: 1px solid #f1c40f;
+        }
+
+        .status-excused {
+            background: #2c4a4a;
+            color: #6fe3ff;
+            border: 1px solid #3498db;
+        }
+
+        .time-badge {
+            background: #0d3340;
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            border: 1px solid #3f92b0;
+            display: inline-block;
+        }
+
+        .placeholder-text {
+            color: #799eb0;
+            font-style: italic;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .no-results {
+            color: #ffb3b3;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+            color: #6fe3ff;
+            font-size: 1.2rem;
+        }
+
+        .loading-spinner::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 3px solid #6fe3ff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: #1c3f4f;
+            padding: 10px 20px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #3b7a94;
+        }
+
+        .stat-label {
+            color: #9bbaca;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .stat-value.present { color: #8fff9f; }
+        .stat-value.late { color: #ffae6d; }
+        .stat-value.absent { color: #ff9f9f; }
+        .stat-value.pending { color: #ffdb8a; }
+        .stat-value.excused { color: #6fe3ff; }
+
+        #sidebarContainer {
+            position: relative;
+            z-index: 1002;
+        }
+
+        .swal2-popup {
+            background: #0b2a3a !important;
+            border-radius: 22px !important;
+            border: 1px solid rgba(110, 243, 255, 0.25) !important;
+        }
+
+        .swal2-title {
+            color: #6ef3ff !important;
+        }
+
+        .swal2-html-container {
+            color: #dffaff !important;
+        }
+
+        .swal2-confirm {
+            background: linear-gradient(135deg, #00f2ff, #7f5cff) !important;
+            color: #020617 !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+        }
+
+        .swal2-cancel {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: #dffaff !important;
+            border: 2px solid #6ef3ff !important;
+            border-radius: 12px !important;
+        }
+
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ff6b6b;
+            color: white;
+            text-align: center;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid #ff8a8a;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to   { transform: translateY(0); }
+        }
+
+        .offline-banner i { margin-right: 8px; }
+
+        .offline-banner button {
+            background: white;
+            color: #ff6b6b;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-left: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .offline-banner button:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .attendance-panel-header h2 {
+                font-size: 1.4rem;
+            }
+            .close-panel-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .attendance-panel-header h2 {
+                font-size: 1.2rem;
+            }
+            .close-panel-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offlineBanner">
+    <i class="fas fa-wifi"></i> You are offline. Some features may not be available.
+    <button onclick="checkConnectionAndReload()">Retry</button>
+</div>
+
+<div id="sidebarContainer"></div>
+
+<nav>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <div class="profile-wrapper">
+        <div class="profile" onclick="toggleProfileMenu()">
+            <img src="images/profile.png" id="navProfileImage" alt="profile">
+        </div>
+        <div id="profileMenu" class="profile-menu">
+            <a href="teachers_profile.html">Edit Profile</a>
+            <a href="#" onclick="confirmLogout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main-content" id="mainContent">
+    <div class="section-header">
+        <h1>Attendance Records</h1>
+        <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="subjectSearch" placeholder="Search subjects..." onkeyup="filterSubjects()">
+        </div>
+    </div>
+
+    <div id="subjectsContainer" class="subjects-grid">
+        <div class="loading-spinner">Loading subjects...</div>
+    </div>
+
+    <!-- Attendance panel (shown when subject clicked) -->
+    <div id="attendancePanel" class="attendance-panel" style="display: none;">
+        <!-- NEW: Header with close button -->
+        <div class="attendance-panel-header">
+            <h2 id="selectedSubjectTitle">Subject Attendance</h2>
+            <div class="close-panel-btn" onclick="closeAttendancePanel()" title="Close panel">✕</div>
+        </div>
+        
+        <!-- Date search section -->
+        <div class="date-search-bar">
+            <div class="date-input-group">
+                <span>📅</span>
+                <input type="date" id="dateSearch" onchange="filterSessionsByDate()">
+            </div>
+            <button class="btn-secondary" onclick="clearDateFilter()">Clear</button>
+        </div>
+
+        <!-- Sessions list -->
+        <div class="sessions-list">
+            <div class="sessions-header">
+                <h3>Attendance Sessions</h3>
+                <span id="sessionCount" class="schedule-badge">0 sessions</span>
+            </div>
+            <div id="sessionsContainer" class="session-cards">
+                <!-- Will be populated with session cards -->
+            </div>
+        </div>
+
+        <!-- Students attendance section -->
+        <div class="students-section" id="studentsSection" style="display: none;">
+            <div class="students-header">
+                <h3 id="selectedSessionInfo">Students Attendance</h3>
+                <div class="student-search-box">
+                    <span>🔍</span>
+                    <input type="text" id="studentSearch" placeholder="Search students..." onkeyup="filterStudents()">
+                </div>
+            </div>
+
+            <!-- Summary stats -->
+            <div id="attendanceSummary" class="summary-stats"></div>
+
+            <div id="attendanceContent" class="attendance-table-container">
+                <!-- Will be populated with student attendance table -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // ---------- SUPABASE INITIALIZATION ----------
+    const { createClient } = supabase;
+    
+    const supabaseClient = createClient(
+        "https://tmyrnjdwaayelrctqppg.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRteXJuamR3YWF5ZWxyY3RxcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDgzODEsImV4cCI6MjA4Njg4NDM4MX0.w_DhdLWk4gA-x434kSobbXjG83IXHpakhRsaig-zMpw"
+    );
+
+    // ---------- OFFLINE DETECTION ----------
+    let isOffline = !navigator.onLine;
+
+    function updateOfflineBanner() {
+        const banner = document.getElementById('offlineBanner');
+        if (banner) banner.style.display = isOffline ? 'block' : 'none';
+    }
+
+    window.addEventListener('online',  () => { isOffline = false; updateOfflineBanner(); });
+    window.addEventListener('offline', () => { isOffline = true;  updateOfflineBanner(); });
+    updateOfflineBanner();
+
+    function checkConnectionAndReload() {
+        if (navigator.onLine) {
+            isOffline = false;
+            updateOfflineBanner();
+            location.reload();
+        }
+    }
+    window.checkConnectionAndReload = checkConnectionAndReload;
+
+    // ---------- PROFILE MENU ----------
+    function toggleProfileMenu() {
+        document.getElementById('profileMenu').classList.toggle('active');
+    }
+    window.toggleProfileMenu = toggleProfileMenu;
+
+    function getCurrentProfessorId() {
+        return localStorage.getItem('userId') || localStorage.getItem('professorId');
+    }
+
+    function getYearText(year) {
+        const years = { '1': '1st Year', '2': '2nd Year', '3': '3rd Year', '4': '4th Year' };
+        return years[year] || 'Unknown Year';
+    }
+
+    function formatAcademicTerm(academicTerm) {
+        if (!academicTerm) return '';
+        const parts = academicTerm.split('-');
+        if (parts.length === 2) {
+            const year = parts[0];
+            const term = parts[1];
+            const yearText = { '1': '1st Year', '2': '2nd Year', '3': '3rd Year', '4': '4th Year' }[year] || `Year ${year}`;
+            const termText = { '1': 'First Semester', '2': 'Second Semester', 'S': 'Summer' }[term] || `Term ${term}`;
+            return `${yearText} - ${termText}`;
+        }
+        return academicTerm;
+    }
+
+    async function loadProfileImage() {
+        const navImg = document.getElementById('navProfileImage');
+        const professorId = getCurrentProfessorId();
+        if (!professorId) { navImg.src = 'images/profile.png'; return; }
+        try {
+            const { data, error } = await supabaseClient
+                .from('professor').select('profile-pic').eq('uid', professorId).single();
+            if (error) { navImg.src = 'images/profile.png'; return; }
+            navImg.src = (data && data['profile-pic']) ? data['profile-pic'] : 'images/profile.png';
+        } catch (error) {
+            navImg.src = 'images/profile.png';
+        }
+    }
+
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?', text: "You will be logged out of your account!", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#00f2ff', cancelButtonColor: '#ff6b6b',
+            confirmButtonText: 'Yes, logout', cancelButtonText: 'Cancel',
+            background: '#0b2a3a', color: '#dffaff'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.clear();
+                Swal.fire({ title: 'Logged Out!', text: 'You have been successfully logged out.', icon: 'success', confirmButtonColor: '#00f2ff', background: '#0b2a3a', color: '#dffaff' })
+                    .then(() => { window.location.href = 'index.html'; });
+            }
+        });
+    }
+    window.confirmLogout = confirmLogout;
+
+    // ---------- SIDEBAR ----------
+    fetch('teachers_sidebar.html')
+        .then(r => r.text())
+        .then(html => {
+            document.getElementById('sidebarContainer').innerHTML = html;
+            initializeSidebar();
+        })
+        .catch(error => {
+            const fallbackSidebar = `
+                <div class="sidebar" id="sidebar">
+                    <button class="close-btn" onclick="toggleMenu()">✕</button>
+                    <ul>
+                        <li><a href="teachers_dashboard.html">Dashboard</a></li>
+                        <li><a href="teachers_schedule.html">Schedule</a></li>
+                        <li><a href="teachers_attendance.html">Attendance</a></li>
+                        <li><a href="teachers_profile.html">Profile</a></li>
+                    </ul>
+                </div>
+                <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+            `;
+            document.getElementById('sidebarContainer').innerHTML = fallbackSidebar;
+            initializeSidebar();
+        });
+
+    function initializeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        if (sidebar && overlay) {
+            window.toggleMenu = function() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            };
+        } else {
+            window.toggleMenu = function() { console.warn('sidebar not ready'); };
+        }
+    }
+
+    // ===== NEW: Close attendance panel function =====
+    function closeAttendancePanel() {
+        document.getElementById('attendancePanel').style.display = 'none';
+        document.getElementById('studentsSection').style.display = 'none';
+        currentSubjectId = null;
+        currentSubjectSchedules = [];
+        selectedScheduleId = null;
+    }
+    window.closeAttendancePanel = closeAttendancePanel;
+
+    // ---------- DATABASE CONNECTION ----------
+    let professorSubjects = [];
+    let professorSchedules = [];
+    let currentSubjectId = null;
+    let currentSubjectSchedules = [];
+    let selectedScheduleId = null;
+    let currentDateFilter = '';
+
+    async function loadProfessorSubjects() {
+        const professorId = getCurrentProfessorId();
+        if (!professorId) return [];
+        try {
+            const { data: subjectsData, error: subjectsError } = await supabaseClient
+                .from('subjects').select('id, sub, sub_code, professor_name, academic_term, section').eq('prof_id', professorId);
+            if (subjectsError) return [];
+            professorSubjects = subjectsData || [];
+            return professorSubjects;
+        } catch (error) { return []; }
+    }
+
+    async function loadProfessorSchedules() {
+        const professorId = getCurrentProfessorId();
+        if (!professorId) return [];
+        try {
+            const { data, error } = await supabaseClient
+                .from('schedule').select('*').eq('uid', professorId).order('date', { ascending: false });
+            if (error) return [];
+            professorSchedules = data || [];
+            return professorSchedules;
+        } catch (error) { return []; }
+    }
+
+    function getSchedulesForSubject(subjectId, subjectName, subjectSection) {
+        return professorSchedules.filter(schedule => {
+            if (schedule.sub !== subjectName) return false;
+            if (subjectSection === 'Any') return true;
+            const setLetter = subjectSection.slice(-1);
+            const scheduleSection = schedule['year-section'] || '';
+            return scheduleSection.endsWith(setLetter);
+        });
+    }
+
+    async function renderSubjectCards() {
+        const container = document.getElementById('subjectsContainer');
+        const filterText = document.getElementById('subjectSearch')?.value.toLowerCase() || '';
+        await loadProfessorSubjects();
+        await loadProfessorSchedules();
+        if (professorSubjects.length === 0) {
+            container.innerHTML = '<div class="placeholder-text">No subjects assigned to you.</div>';
+            return;
+        }
+        const filteredSubjects = professorSubjects.filter(sub => 
+            sub.sub.toLowerCase().includes(filterText) || (sub.sub_code && sub.sub_code.toLowerCase().includes(filterText))
+        );
+        container.innerHTML = '';
+        if (filteredSubjects.length === 0) {
+            container.innerHTML = '<div class="placeholder-text">No subjects match your search.</div>';
+            return;
+        }
+        filteredSubjects.forEach(sub => {
+            let scheduleCount = 0;
+            if (sub.section === 'Any') scheduleCount = professorSchedules.filter(s => s.sub === sub.sub).length;
+            else {
+                const setLetter = sub.section.slice(-1);
+                scheduleCount = professorSchedules.filter(s => s.sub === sub.sub && (s['year-section'] || '').endsWith(setLetter)).length;
+            }
+            const termDisplay = sub.academic_term ? formatAcademicTerm(sub.academic_term) : '';
+            let setDisplay = '';
+            if (sub.section) {
+                if (sub.section === 'Any') setDisplay = 'Any Set';
+                else setDisplay = `${sub.section.slice(-1)}`;
+            }
+            const card = document.createElement('div');
+            card.className = 'subject-card';
+            let cardContent = `<h3>${sub.sub}</h3><p>${sub.sub_code || ''}</p>`;
+            if (termDisplay) cardContent += `<p style="color: #6fe3ff; font-size: 0.85rem; margin-top: 5px;">${termDisplay}</p>`;
+            if (setDisplay) cardContent += `<p style="color: #a0e7ff; font-size: 0.8rem; margin-top: 3px;">${setDisplay}</p>`;
+            cardContent += `<span class="subject-badge">${scheduleCount} session${scheduleCount !== 1 ? 's' : ''}</span>`;
+            card.innerHTML = cardContent;
+            card.addEventListener('click', () => openSubjectAttendance(sub.id, sub.sub, sub.section));
+            container.appendChild(card);
+        });
+    }
+
+    window.filterSubjects = function() { renderSubjectCards(); };
+
+    function openSubjectAttendance(subjectId, subjectName, subjectSection) {
+        currentSubjectId = subjectId;
+        currentSubjectSchedules = getSchedulesForSubject(subjectId, subjectName, subjectSection);
+        const panel = document.getElementById('attendancePanel');
+        panel.style.display = 'block';
+        let sectionDisplay = '';
+        if (subjectSection) {
+            if (subjectSection === 'Any') sectionDisplay = 'Any Set';
+            else sectionDisplay = `Set ${subjectSection.slice(-1)}`;
+        }
+        const titleText = sectionDisplay ? `${subjectName} - ${sectionDisplay}` : subjectName;
+        document.getElementById('selectedSubjectTitle').innerText = `${titleText} - Attendance`;
+        panel.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('dateSearch').value = '';
+        currentDateFilter = '';
+        selectedScheduleId = null;
+        document.getElementById('studentsSection').style.display = 'none';
+        renderSessionCards();
+    }
+    window.openSubjectAttendance = openSubjectAttendance;
+
+    function formatTime(timeString) {
+        if (!timeString) return 'N/A';
+        const parts = timeString.split(':');
+        const hour = parseInt(parts[0]);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${parts[1]} ${ampm}`;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    // Helper: check if schedule has ended
+    function isScheduleEnded(schedule) {
+        if (!schedule) return true;
+        const now = new Date();
+        const endDateTime = new Date(schedule.date);
+        const [endHour, endMinute] = (schedule['time-out'] || '00:00').split(':').map(Number);
+        endDateTime.setHours(endHour, endMinute, 0, 0);
+        return now > endDateTime;
+    }
+
+    function renderSessionCards() {
+        const container = document.getElementById('sessionsContainer');
+        if (!currentSubjectSchedules || currentSubjectSchedules.length === 0) {
+            container.innerHTML = '<div class="placeholder-text">No attendance sessions available for this subject set.</div>';
+            document.getElementById('sessionCount').textContent = '0 sessions';
+            return;
+        }
+        let filteredSessions = currentSubjectSchedules;
+        if (currentDateFilter) filteredSessions = currentSubjectSchedules.filter(s => s.date === currentDateFilter);
+        document.getElementById('sessionCount').textContent = `${filteredSessions.length} session${filteredSessions.length !== 1 ? 's' : ''}`;
+        if (filteredSessions.length === 0) {
+            container.innerHTML = '<div class="no-results">No sessions match the selected date.</div>';
+            return;
+        }
+        container.innerHTML = '';
+        filteredSessions.forEach(session => {
+            const startFormatted = formatTime(session['time-in']);
+            const endFormatted = formatTime(session['time-out']);
+            const card = document.createElement('div');
+            card.className = `session-card ${selectedScheduleId === session.id ? 'active' : ''}`;
+            card.setAttribute('data-session-id', session.id);
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-session';
+            downloadBtn.textContent = 'Download';
+            downloadBtn.onclick = (e) => { e.stopPropagation(); downloadSessionAttendance(session.id); };
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-session';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = (e) => { e.stopPropagation(); deleteSession(session.id); };
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'session-actions';
+            actionsDiv.appendChild(downloadBtn);
+            actionsDiv.appendChild(deleteBtn);
+            card.innerHTML = `<div class="session-info">
+                <span class="session-date">${formatDate(session.date)}</span>
+                <span class="session-time">${startFormatted} - ${endFormatted}</span>
+                <span style="font-size: 0.8rem; color: #6fe3ff; margin-top: 3px;">Section: ${session['year-section'] || 'N/A'}</span>
+            </div>`;
+            card.appendChild(actionsDiv);
+            card.addEventListener('click', (e) => { if (!e.target.closest('button')) selectSession(session.id); });
+            container.appendChild(card);
+        });
+    }
+
+    window.filterSessionsByDate = function() {
+        currentDateFilter = document.getElementById('dateSearch').value;
+        renderSessionCards();
+        if (selectedScheduleId) {
+            const sessionStillExists = currentSubjectSchedules.some(s => s.id === selectedScheduleId && (!currentDateFilter || s.date === currentDateFilter));
+            if (!sessionStillExists) {
+                document.getElementById('studentsSection').style.display = 'none';
+                selectedScheduleId = null;
+            }
+        }
+    };
+
+    window.clearDateFilter = function() {
+        document.getElementById('dateSearch').value = '';
+        currentDateFilter = '';
+        renderSessionCards();
+    };
+
+    async function fetchEnrolledStudents(subjectId) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('enrollment_sub')
+                .select(`stud_id, year_section, student:stud_id (id, fname, lname, email, "year-section")`)
+                .eq('sub_id', subjectId);
+            if (error) return [];
+            if (!data || data.length === 0) return [];
+            return data.map(item => item.student).filter(s => s !== null).sort((a, b) => (a.lname || '').localeCompare(b.lname || ''));
+        } catch (error) { return []; }
+    }
+
+    async function fetchAttendanceFromScheduleList(scheduleId) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('schedule_list').select('student_id, time_in, status').eq('sched_id', scheduleId);
+            if (error) return [];
+            return data || [];
+        } catch (error) { return []; }
+    }
+
+    async function selectSession(scheduleId) {
+        selectedScheduleId = scheduleId;
+        document.querySelectorAll('.session-card').forEach(card => card.classList.remove('active'));
+        const clickedCard = Array.from(document.querySelectorAll('.session-card')).find(c => c.getAttribute('data-session-id') === scheduleId);
+        if (clickedCard) clickedCard.classList.add('active');
+        document.getElementById('studentSearch').value = '';
+        document.getElementById('studentsSection').style.display = 'block';
+        await renderAttendanceTable(scheduleId);
+    }
+
+    async function renderAttendanceTable(scheduleId) {
+        const schedule = professorSchedules.find(s => s.id === scheduleId);
+        if (!schedule) return;
+        
+        const scheduleEnded = isScheduleEnded(schedule);
+        
+        document.getElementById('selectedSessionInfo').textContent = `Attendance for ${schedule.sub} on ${formatDate(schedule.date)}`;
+        const container = document.getElementById('attendanceContent');
+        const summaryDiv = document.getElementById('attendanceSummary');
+        container.innerHTML = '<div class="loading-spinner">Loading attendance...</div>';
+        summaryDiv.innerHTML = '';
+        
+        const subject = professorSubjects.find(s => s.sub === schedule.sub && (s.section === 'Any' || schedule['year-section'].endsWith(s.section.slice(-1))));
+        const subjectId = subject ? subject.id : null;
+        const students = subjectId ? await fetchEnrolledStudents(subjectId) : [];
+        const attendance = await fetchAttendanceFromScheduleList(scheduleId);
+        const attendanceMap = new Map();
+        attendance.forEach(record => { attendanceMap.set(record.student_id, record); });
+        
+        let present = 0, late = 0, absent = 0, pending = 0;
+        
+        const attendanceRecords = students.map(student => {
+            const record = attendanceMap.get(student.id);
+            let status;
+            if (record) {
+                status = record.status;
+                if (status === 'present') present++;
+                else if (status === 'late') late++;
+                else absent++;
+            } else {
+                // No record: if schedule ended -> absent, else pending
+                if (scheduleEnded) {
+                    status = 'absent';
+                    absent++;
+                } else {
+                    status = 'pending';
+                    pending++;
+                }
+            }
+            return {
+                ...student,
+                status: status,
+                timeIn: record ? record.time_in : null,
+                fullName: `${student.lname}, ${student.fname}`,
+                yearSection: student['year-section'] || 'N/A'
+            };
+        });
+        
+        summaryDiv.innerHTML = `
+            <div class="stat-item"><span class="stat-label">Total:</span><span class="stat-value">${students.length}</span></div>
+            <div class="stat-item"><span class="stat-label">Present:</span><span class="stat-value present">${present}</span></div>
+            <div class="stat-item"><span class="stat-label">Late:</span><span class="stat-value late">${late}</span></div>
+            <div class="stat-item"><span class="stat-label">Pending:</span><span class="stat-value pending">${pending}</span></div>
+            <div class="stat-item"><span class="stat-label">Absent:</span><span class="stat-value absent">${absent}</span></div>
+        `;
+        
+        const searchTerm = document.getElementById('studentSearch').value.toLowerCase().trim();
+        let filteredRecords = attendanceRecords;
+        if (searchTerm) {
+            filteredRecords = filteredRecords.filter(r => 
+                r.fullName.toLowerCase().includes(searchTerm) || 
+                r.fname.toLowerCase().includes(searchTerm) || 
+                r.lname.toLowerCase().includes(searchTerm)
+            );
+        }
+        filteredRecords.sort((a, b) => {
+            if (a.yearSection !== b.yearSection) return a.yearSection.localeCompare(b.yearSection);
+            return a.lname.localeCompare(b.lname);
+        });
+        
+        if (filteredRecords.length === 0) {
+            container.innerHTML = '<div class="no-results">No enrolled students match your search.</div>';
+            return;
+        }
+        
+        let tableHTML = `<table class="attendance-table"><thead><tr><th>Student Name</th><th>Student ID</th><th>Year & Section</th><th>Time In</th><th>Status</th></tr></thead><tbody>`;
+        filteredRecords.forEach(record => {
+            let statusClass = '';
+            if (record.status === 'present') statusClass = 'status-present';
+            else if (record.status === 'late') statusClass = 'status-late';
+            else if (record.status === 'absent') statusClass = 'status-absent';
+            else if (record.status === 'pending') statusClass = 'status-pending';
+            
+            const timeInDisplay = record.timeIn ? formatTime(record.timeIn) : '—';
+            tableHTML += `<tr>
+                <td>${record.lname}, ${record.fname}</td>
+                <td>${record.id}</td>
+                <td>${record.yearSection}</td>
+                <td><span class="time-badge">${timeInDisplay}</span></td>
+                <td><span class="status-badge ${statusClass}">${record.status.toUpperCase()}</span></td>
+            </tr>`;
+        });
+        tableHTML += `</tbody></table>`;
+        container.innerHTML = tableHTML;
+    }
+
+    window.filterStudents = function() { 
+        if (selectedScheduleId) renderAttendanceTable(selectedScheduleId); 
+    };
+
+    async function downloadSessionAttendance(scheduleId) {
+        const schedule = professorSchedules.find(s => s.id === scheduleId);
+        if (!schedule) { Swal.fire({ title: 'Error', text: 'Schedule not found.', icon: 'error' }); return; }
+        try {
+            Swal.fire({ title: 'Generating CSV...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const subject = professorSubjects.find(s => s.sub === schedule.sub && (s.section === 'Any' || schedule['year-section'].endsWith(s.section.slice(-1))));
+            const subjectId = subject ? subject.id : null;
+            const students = subjectId ? await fetchEnrolledStudents(subjectId) : [];
+            if (students.length === 0) { Swal.fire({ title: 'No Students', text: 'No students enrolled in this subject.', icon: 'warning' }); return; }
+            const attendance = await fetchAttendanceFromScheduleList(scheduleId);
+            const attendanceMap = new Map();
+            attendance.forEach(record => { attendanceMap.set(record.student_id, record); });
+            
+            const scheduleEnded = isScheduleEnded(schedule);
+            
+            let csv = 'Student Name,Student ID,Year & Section,Time In,Status\n';
+            students.sort((a, b) => {
+                if (a['year-section'] !== b['year-section']) return a['year-section'].localeCompare(b['year-section']);
+                return a.lname.localeCompare(b.lname);
+            });
+            students.forEach(student => {
+                const record = attendanceMap.get(student.id);
+                let status, timeIn = '';
+                if (record) {
+                    status = record.status ? record.status.toUpperCase() : 'ABSENT';
+                    timeIn = record.time_in || '';
+                } else {
+                    status = scheduleEnded ? 'ABSENT' : 'PENDING';
+                    timeIn = '';
+                }
+                const studentName = `${student.lname}, ${student.fname}`.replace(/"/g, '""');
+                csv += `"${studentName}",${student.id},"${student['year-section'] || 'N/A'}",${timeIn},${status}\n`;
+            });
+            Swal.close();
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${schedule.sub}_${schedule.date}_attendance.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            Swal.fire({ title: 'Downloaded!', text: 'Attendance CSV has been downloaded.', icon: 'success', timer: 2000 });
+        } catch (error) { Swal.fire({ title: 'Error', text: 'Failed to download attendance.', icon: 'error' }); }
+    }
+    window.downloadSessionAttendance = downloadSessionAttendance;
+
+    async function deleteSession(scheduleId) {
+        const result = await Swal.fire({
+            title: 'Delete Session', text: 'Are you sure? All attendance records will be permanently deleted.',
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#ff6b6b', cancelButtonColor: '#6c757d'
+        });
+        if (!result.isConfirmed) return;
+        try {
+            Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            await supabaseClient.from('schedule_list').delete().eq('sched_id', scheduleId);
+            await supabaseClient.from('schedule').delete().eq('id', scheduleId);
+            Swal.close();
+            Swal.fire({ title: 'Deleted!', text: 'Attendance session has been deleted.', icon: 'success', timer: 1500 });
+            await loadProfessorSchedules();
+            const currentSubject = professorSubjects.find(s => s.id === currentSubjectId);
+            if (currentSubject) currentSubjectSchedules = getSchedulesForSubject(currentSubjectId, currentSubject.sub, currentSubject.section);
+            if (selectedScheduleId === scheduleId) {
+                document.getElementById('studentsSection').style.display = 'none';
+                selectedScheduleId = null;
+            }
+            renderSessionCards();
+        } catch (error) { Swal.fire({ title: 'Error', text: 'Failed to delete session.', icon: 'error' }); }
+    }
+    window.deleteSession = deleteSession;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadProfileImage();
+        await renderSubjectCards();
+        window.addEventListener('click', function(e) {
+            const profileMenu = document.getElementById('profileMenu');
+            const profilePic = document.querySelector('.profile');
+            if (!profilePic?.contains(e.target) && !profileMenu?.contains(e.target)) profileMenu?.classList.remove('active');
+        });
+    });
+</script>
+
+</body>
+</html>
